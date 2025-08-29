@@ -511,14 +511,6 @@ function update_order_shipping_fields($order, $data) {
 
 
 
-// Clear session after order is placed
-
-add_action('woocommerce_checkout_order_processed', 'clear_custom_shipping_session', 10, 1);
-function clear_custom_shipping_session($order_id) {
-    WC()->session->set('custom_shipping_address', null);
-}
-
-// Clear session after order is placed
 
 
 // Add function to display shipping dimensions on product page
@@ -632,88 +624,3 @@ function display_custom_inputs_on_product_page() {
 
 
 // Calculate Sheets Required
-
-
-
-
-// CALCULATE PRODUCT WEIGHTS
-
-function calculate_product_weight($product_id, $width, $length, $qty) {
-    global $product;
-
-    // Ensure $product is set
-    if (!$product || $product->get_id() != $product_id) {
-        $product = wc_get_product($product_id);
-    }
-
-    // Validate inputs
-    if (!is_numeric($width) || !is_numeric($length) || !is_numeric($qty)) {
-        return new WP_Error('invalid_input', 'Invalid input data for weight calculation');
-    }
-
-    $width = floatval($width);
-    $length = floatval($length);
-    $qty = intval($qty);
-
-    if ($width <= 0 || $length <= 0 || $qty < 1) {
-        return new WP_Error('invalid_input', 'Width, Length, and Quantity must be positive');
-    }
-
-    // Get product weight (in kg)
-    $product_weight = $product->get_weight();
-    if (!is_numeric($product_weight) || $product_weight <= 0) {
-        return new WP_Error('invalid_weight', 'Invalid or missing product weight');
-    }
-
-    // Calculate total weight
-    $totalSqMm = $width * $length;
-    $totalSqCm = $totalSqMm / 100;
-    $weight_SqCm = floatval($product_weight);
-    $total_del_weight = $totalSqCm * $weight_SqCm * $qty * 1.03;
-
-    // Debug logging (only if WP_DEBUG is enabled)
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log("Debug [Product ID: $product_id, Weight Calculation]:");
-        error_log("  width: $width mm");
-        error_log("  length: $length mm");
-        error_log("  totalSqMm: $totalSqMm");
-        error_log("  totalSqCm: $totalSqCm");
-        error_log("  weight_SqCm: $weight_SqCm kg/cm²");
-        error_log("  qty: $qty");
-        error_log("  total_del_weight: $total_del_weight kg");
-    }
-
-    return round($total_del_weight, 2);
-}
-
-// Display Product Weight on Product Page
-add_action('woocommerce_before_single_product_summary', 'display_product_weight', 10);
-function display_product_weight() {
-    global $product;
-
-    $product_id = $product->get_id();
-
-    // Get form input values from $_POST (submitted via form)
-    $width = isset($_POST['custom_width']) ? floatval($_POST['custom_width']) : 0;
-    $length = isset($_POST['custom_length']) ? floatval($_POST['custom_length']) : 0;
-    $qty = isset($_POST['custom_qty']) ? intval($_POST['custom_qty']) : 0;
-
-    // Only calculate and display if valid inputs are provided
-    if ($width > 0 && $length > 0 && $qty > 0) {
-        $total_weight = calculate_product_weight($product_id, $width, $length, $qty);
-
-        if (!is_wp_error($total_weight)) {
-            $weight_unit = get_option('woocommerce_weight_unit');
-            echo '<div class="product-weight" style="margin-bottom: 20px; font-weight: bold;">';
-            echo '<p>Total Delivery Weight: ' . esc_html($total_weight) . ' ' . esc_html($weight_unit) . '</p>';
-            echo '</div>';
-        } else {
-            // Optionally display error for debugging (hidden in production)
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                echo '<div class="product-weight-error" style="color: red;">';
-                echo '<p>Error: ' . esc_html($total_weight->get_error_message()) . '</p>';
-                echo '</div>';
-            }
-        }
-    }
-}

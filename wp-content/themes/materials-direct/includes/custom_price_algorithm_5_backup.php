@@ -208,31 +208,12 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
         isset($_POST['custom_zip_postal']) &&
         isset($_POST['custom_country'])
     ) {
-
-        // Get product object to retrieve sheet dimensions
-        $product = wc_get_product($product_id);
-        $sheet_length_mm = $product->get_length() * 10; // Convert cm to mm
-        $sheet_width_mm = $product->get_width() * 10;   // Convert cm to mm
-        $part_width_mm = floatval($_POST['custom_width']);
-        $part_length_mm = floatval($_POST['custom_length']);
-        $quantity = intval($_POST['custom_qty']);
-
-        // Calculate sheets required
-        $sheet_result = calculate_sheets_required(
-            $sheet_width_mm,
-            $sheet_length_mm,
-            $part_width_mm,
-            $part_length_mm,
-            $quantity
-        );
-
         $cart_item_data['custom_inputs'] = [
             'width' => floatval($_POST['custom_width']),
             'length' => floatval($_POST['custom_length']),
             'qty' => intval($_POST['custom_qty']),
             'price' => floatval($_POST['custom_price']),
             'discount_rate' => floatval($_POST['custom_discount_rate']),
-            'sheets_required' => $sheet_result['sheets_required'], // Store sheets_required
             'shipping_address' => [
                 'street_address' => sanitize_text_field($_POST['custom_street_address']),
                 'address_line2' => sanitize_text_field($_POST['custom_address_line2']),
@@ -247,83 +228,6 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
         WC()->session->set('custom_shipping_address', $cart_item_data['custom_inputs']['shipping_address']);
     }
     return $cart_item_data;
-}
-
-// Save sheets_required to order item meta
-add_action('woocommerce_checkout_create_order_line_item', 'save_sheets_required_to_order_item', 10, 4);
-function save_sheets_required_to_order_item($item, $cart_item_key, $values, $order) {
-    if (isset($values['custom_inputs']['sheets_required'])) {
-        $item->add_meta_data('sheets_required', $values['custom_inputs']['sheets_required'], true);
-    }
-    if (isset($values['custom_inputs']['shipping_address'])) {
-        $item->add_meta_data('custom_shipping_address', $values['custom_inputs']['shipping_address'], true);
-    }
-}
-
-// Update display function to show sheets_required in cart and checkout
-add_filter('woocommerce_get_item_data', 'show_custom_input_details_in_cart', 10, 2);
-function show_custom_input_details_in_cart($item_data, $cart_item) {
-    if (!empty($cart_item['custom_inputs'])) {
-        // Width
-        if (isset($cart_item['custom_inputs']['width'])) {
-            $item_data[] = [
-                'name' => 'Width',
-                'value' => $cart_item['custom_inputs']['width'] . ' mm'
-            ];
-        }
-
-        // Length
-        if (isset($cart_item['custom_inputs']['length'])) {
-            $item_data[] = [
-                'name' => 'Length',
-                'value' => $cart_item['custom_inputs']['length'] . ' mm'
-            ];
-        }
-
-        // Quantity
-        if (isset($cart_item['custom_inputs']['qty'])) {
-            $item_data[] = [
-                'name' => 'Quantity',
-                'value' => $cart_item['custom_inputs']['qty']
-            ];
-        }
-
-        // Custom Price
-        if (isset($cart_item['custom_inputs']['price'])) {
-            $item_data[] = [
-                'name' => 'Custom Price',
-                'value' => wc_price($cart_item['custom_inputs']['price'])
-            ];
-        }
-
-        // Delivery Time / Discount Rate
-        if (isset($cart_item['custom_inputs']['discount_rate'])) {
-            $discount_labels = [
-                '0' => '24Hrs (working day)',
-                '0.015' => '48Hrs (working days) (1.5% Discount)',
-                '0.02' => '5 Days (working days) (2% Discount)',
-                '0.025' => '7 Days (working days) (2.5% Discount)',
-                '0.03' => '12 Days (working days) (3% Discount)',
-                '0.035' => '14 Days (working days) (3.5% Discount)',
-                '0.04' => '30 Days (working days) (4% Discount)',
-                '0.05' => '35 Days (working days) (5% Discount)',
-            ];
-            $rate_key = (string)$cart_item['custom_inputs']['discount_rate'];
-            $item_data[] = [
-                'name' => 'Delivery Time',
-                'value' => isset($discount_labels[$rate_key]) ? $discount_labels[$rate_key] : 'Unknown'
-            ];
-        }
-
-        // Sheets Required
-        if (isset($cart_item['custom_inputs']['sheets_required'])) {
-            $item_data[] = [
-                'name' => 'Sheets Required',
-                'value' => $cart_item['custom_inputs']['sheets_required']
-            ];
-        }
-    }
-    return $item_data;
 }
 
 add_filter('woocommerce_get_cart_item_from_session', function($item, $values) {
@@ -355,6 +259,69 @@ function apply_secure_custom_price($cart) {
 }
 
 
+// Display Inputs in Cart/Checkout
+// Display custom inputs in Cart/Checkout without per-item shipping address
+add_filter('woocommerce_get_item_data', 'show_custom_input_details_in_cart', 10, 2);
+function show_custom_input_details_in_cart($item_data, $cart_item) {
+
+    if (!empty($cart_item['custom_inputs'])) {
+        // Width
+        if (isset($cart_item['custom_inputs']['width'])) {
+            $item_data[] = [
+                'name'  => 'Width',
+                'value' => $cart_item['custom_inputs']['width'] . ' cm'
+            ];
+        }
+
+        // Length
+        if (isset($cart_item['custom_inputs']['length'])) {
+            $item_data[] = [
+                'name'  => 'Length',
+                'value' => $cart_item['custom_inputs']['length'] . ' cm'
+            ];
+        }
+
+        // Quantity
+        if (isset($cart_item['custom_inputs']['qty'])) {
+            $item_data[] = [
+                'name'  => 'Quantity',
+                'value' => $cart_item['custom_inputs']['qty']
+            ];
+        }
+
+        // Custom Price
+        if (isset($cart_item['custom_inputs']['price'])) {
+            $item_data[] = [
+                'name'  => 'Custom Price',
+                'value' => wc_price($cart_item['custom_inputs']['price'])
+            ];
+        }
+
+        // Delivery Time / Discount Rate
+        if (isset($cart_item['custom_inputs']['discount_rate'])) {
+            $discount_labels = [
+                '0'     => '24Hrs (working day)',
+                '0.015' => '48Hrs (working days) (1.5% Discount)',
+                '0.02'  => '5 Days (working days) (2% Discount)',
+                '0.025' => '7 Days (working days) (2.5% Discount)',
+                '0.03'  => '12 Days (working days) (3% Discount)',
+                '0.035' => '14 Days (working days) (3.5% Discount)',
+                '0.04'  => '30 Days (working days) (4% Discount)',
+                '0.05'  => '35 Days (working days) (5% Discount)',
+            ];
+
+            $rate_key = (string) $cart_item['custom_inputs']['discount_rate'];
+
+            $item_data[] = [
+                'name'  => 'Delivery Time',
+                'value' => isset($discount_labels[$rate_key]) ? $discount_labels[$rate_key] : 'Unknown'
+            ];
+        }
+    }
+
+    return $item_data;
+}
+// End Display Inputs in Cart/Checkout
 
 
 // Display Shipping Address on Checkout Page
@@ -425,7 +392,6 @@ function save_shipping_address_to_order_item($item, $cart_item_key, $values, $or
 // Save Shipping Address to Order Meta and Display in Emails
 
 
-
 // Display Shipping Address in Order Emails
 
 add_action('woocommerce_email_customer_details', 'add_custom_shipping_address_below_billing', 25, 4);
@@ -467,7 +433,6 @@ function add_custom_shipping_address_below_billing($order, $sent_to_admin, $plai
 // Display Shipping Address in Order Emails
 
 
-
 // Display global shipping address below cart tables
 add_action('woocommerce_after_cart_table', 'display_global_shipping_address_cart');
 function display_global_shipping_address_cart() {
@@ -486,6 +451,26 @@ function display_global_shipping_address_cart() {
 }
 // Display global shipping address below cart tables
 
+
+// Display global shipping address below checkout tables
+/*
+add_action('woocommerce_after_cart_totals', 'display_global_shipping_address_checkout');
+function display_global_shipping_address_checkout() {
+    $shipping_address = WC()->session->get('custom_shipping_address');
+    if (!$shipping_address) return;
+
+    echo '<div class="global-shipping-address" style="margin-top:20px;">';
+    echo '<h3>Shipping Details!</h3>';
+    echo esc_html($shipping_address['street_address']) . '<br>';
+    if (!empty($shipping_address['address_line2'])) {
+        echo esc_html($shipping_address['address_line2']) . '<br>';
+    }
+    echo esc_html($shipping_address['city']) . ', ' . esc_html($shipping_address['county_state']) . ', ' . esc_html($shipping_address['zip_postal']) . '<br>';
+    echo esc_html($shipping_address['country']) . '<br>';
+    echo '</div>';
+}
+    */
+// Display global shipping address below checkout tables
 
 
 // Save the WP Session shipping address to the orders page
@@ -510,210 +495,3 @@ function update_order_shipping_fields($order, $data) {
 // Save the WP Session shipping address to the orders page
 
 
-
-// Clear session after order is placed
-
-add_action('woocommerce_checkout_order_processed', 'clear_custom_shipping_session', 10, 1);
-function clear_custom_shipping_session($order_id) {
-    WC()->session->set('custom_shipping_address', null);
-}
-
-// Clear session after order is placed
-
-
-// Add function to display shipping dimensions on product page
-add_action('woocommerce_single_product_summary', 'display_product_shipping_dimensions', 20);
-
-function display_product_shipping_dimensions() {
-    global $product;
-    
-    $shipping_length = $product->get_length();
-    $shipping_width = $product->get_width();
-    $dimension_unit  = get_option('woocommerce_dimension_unit');
-    
-    if (!empty($shipping_length) && !empty($shipping_width)) {
-        $dimensions =  esc_html($shipping_length) . ' ' . esc_html(get_option('woocommerce_dimension_unit')) . ' x ' . esc_html($shipping_width) . ' ' . esc_html(get_option('woocommerce_dimension_unit'));
-        echo '<p class="product-dimensions">Stock sheet size: ' . $dimensions .  '</p>';
-    }
-
-}
-// Add function to display shipping dimensions on product page
-
-
-
-
-
-
-
-
-
-
-
-// Calculate Sheets Required
-
-function calculate_sheets_required($sheet_width, $sheet_length, $part_width, $part_length, $quantity, $edge_margin = 2, $gap = 4) {
-    // Calculate max parts per row (width-wise)
-    $max_parts_per_row = 1;
-    while (true) {
-        $total_width = (2 * $edge_margin) + ($max_parts_per_row * $part_width) + (($max_parts_per_row - 1) * $gap);
-        if ($total_width > $sheet_width) break;
-        $max_parts_per_row++;
-    }
-    $max_parts_per_row--; // Last valid count
-
-    // Calculate max parts per column (length-wise)
-    $max_parts_per_column = 1;
-    while (true) {
-        $total_length = (2 * $edge_margin) + ($max_parts_per_column * $part_length) + (($max_parts_per_column - 1) * $gap);
-        if ($total_length > $sheet_length) break;
-        $max_parts_per_column++;
-    }
-    $max_parts_per_column--; // Last valid count
-
-    // Calculate parts per sheet
-    $parts_per_sheet = $max_parts_per_row * $max_parts_per_column;
-
-    if ($parts_per_sheet <= 0) {
-        return [
-            'sheets_required' => 0,
-            'parts_per_sheet' => 0,
-            'max_columns' => 0,
-            'max_rows' => 0
-        ];
-    }
-
-    // Calculate required sheets
-    $sheets_required = ceil($quantity / $parts_per_sheet);
-
-    return [
-        'sheets_required' => $sheets_required,
-        'parts_per_sheet' => $parts_per_sheet,
-        'max_columns' => $max_parts_per_row,
-        'max_rows' => $max_parts_per_column
-    ];
-}
-
-
-
-add_action('woocommerce_before_single_product', 'display_custom_inputs_on_product_page');
-function display_custom_inputs_on_product_page() {
-
-	global $product;
-
-	// WooCommerce returns length/width in cm – convert to mm
-	$sheet_length_mm = $product->get_length() * 10; // cm → mm
-	$sheet_width_mm  = $product->get_width() * 10;  // cm → mm
-
-	// Form values (part size and quantity) are in mm
-	$part_length_mm = isset($_POST['custom_length']) ? floatval($_POST['custom_length']) : 0;
-	$part_width_mm  = isset($_POST['custom_width']) ? floatval($_POST['custom_width']) : 0;
-	$quantity       = isset($_POST['custom_qty']) ? intval($_POST['custom_qty']) : 0;
-
-	// Display raw inputs
-	echo "<strong>Sheet Size (mm):</strong> {$sheet_width_mm} x {$sheet_length_mm}<br>";
-	echo "<strong>Part Size (mm):</strong> {$part_width_mm} x {$part_length_mm}<br>";
-	echo "<strong>Quantity Needed:</strong> {$quantity}<br>";
-
-	// Call updated calculator function
-	$result = calculate_sheets_required(
-		$sheet_width_mm,
-		$sheet_length_mm,
-		$part_width_mm,
-		$part_length_mm,
-		$quantity
-	);
-
-	// Output result
-	echo "<strong>Sheets Required:</strong> {$result['sheets_required']}<br>";
-	echo "<strong>Parts Per Sheet:</strong> {$result['parts_per_sheet']}<br>";
-	echo "<strong>Max Columns:</strong> {$result['max_columns']}<br>";
-	echo "<strong>Max Rows:</strong> {$result['max_rows']}<br>";
-}
-
-
-// Calculate Sheets Required
-
-
-
-
-// CALCULATE PRODUCT WEIGHTS
-
-function calculate_product_weight($product_id, $width, $length, $qty) {
-    global $product;
-
-    // Ensure $product is set
-    if (!$product || $product->get_id() != $product_id) {
-        $product = wc_get_product($product_id);
-    }
-
-    // Validate inputs
-    if (!is_numeric($width) || !is_numeric($length) || !is_numeric($qty)) {
-        return new WP_Error('invalid_input', 'Invalid input data for weight calculation');
-    }
-
-    $width = floatval($width);
-    $length = floatval($length);
-    $qty = intval($qty);
-
-    if ($width <= 0 || $length <= 0 || $qty < 1) {
-        return new WP_Error('invalid_input', 'Width, Length, and Quantity must be positive');
-    }
-
-    // Get product weight (in kg)
-    $product_weight = $product->get_weight();
-    if (!is_numeric($product_weight) || $product_weight <= 0) {
-        return new WP_Error('invalid_weight', 'Invalid or missing product weight');
-    }
-
-    // Calculate total weight
-    $totalSqMm = $width * $length;
-    $totalSqCm = $totalSqMm / 100;
-    $weight_SqCm = floatval($product_weight);
-    $total_del_weight = $totalSqCm * $weight_SqCm * $qty * 1.03;
-
-    // Debug logging (only if WP_DEBUG is enabled)
-    if (defined('WP_DEBUG') && WP_DEBUG) {
-        error_log("Debug [Product ID: $product_id, Weight Calculation]:");
-        error_log("  width: $width mm");
-        error_log("  length: $length mm");
-        error_log("  totalSqMm: $totalSqMm");
-        error_log("  totalSqCm: $totalSqCm");
-        error_log("  weight_SqCm: $weight_SqCm kg/cm²");
-        error_log("  qty: $qty");
-        error_log("  total_del_weight: $total_del_weight kg");
-    }
-
-    return round($total_del_weight, 2);
-}
-
-// Display Product Weight on Product Page
-add_action('woocommerce_before_single_product_summary', 'display_product_weight', 10);
-function display_product_weight() {
-    global $product;
-
-    $product_id = $product->get_id();
-
-    // Get form input values from $_POST (submitted via form)
-    $width = isset($_POST['custom_width']) ? floatval($_POST['custom_width']) : 0;
-    $length = isset($_POST['custom_length']) ? floatval($_POST['custom_length']) : 0;
-    $qty = isset($_POST['custom_qty']) ? intval($_POST['custom_qty']) : 0;
-
-    // Only calculate and display if valid inputs are provided
-    if ($width > 0 && $length > 0 && $qty > 0) {
-        $total_weight = calculate_product_weight($product_id, $width, $length, $qty);
-
-        if (!is_wp_error($total_weight)) {
-            $weight_unit = get_option('woocommerce_weight_unit');
-            echo '<div class="product-weight" style="margin-bottom: 20px; font-weight: bold;">';
-            echo '<p>Total Delivery Weight: ' . esc_html($total_weight) . ' ' . esc_html($weight_unit) . '</p>';
-            echo '</div>';
-        } else {
-            // Optionally display error for debugging (hidden in production)
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                echo '<div class="product-weight-error" style="color: red;">';
-                echo '<p>Error: ' . esc_html($total_weight->get_error_message()) . '</p>';
-                echo '</div>';
-            }
-        }
-    }
-}

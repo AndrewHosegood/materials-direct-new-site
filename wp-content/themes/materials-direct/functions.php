@@ -190,16 +190,25 @@ require_once('includes/custom_price_algorithm_5.php');
 // Generate and display PPP for testing
 
 // Display Ajax Page spinner
-require_once('includes/page_load_spinner.php');
+// require_once('includes/page_load_spinner.php');
 // Display Ajax Page spinner
 
 // Display Stock Sheet Sizes On Product Page
-require_once('includes/custom-shipping-calculation.php');
+//require_once('includes/custom-shipping-calculation.php');
 // Display Stock Sheet Sizes On Product Page
 
 // Calculate Nnmber Of Sheets Required
-require_once('includes/number-of-sheets-required.php');
+//require_once('includes/number-of-sheets-required.php');
 // Calculate Nnmber Of Sheets Required
+
+
+// Calculate Nnmber Of Sheets Required
+//require_once('includes/display_order_object_on_thankyou_page.php');
+// Calculate Nnmber Of Sheets Required
+
+
+
+
 
 /* END CUSTOM FUNCTIONS */
 
