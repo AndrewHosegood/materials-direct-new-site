@@ -14,7 +14,7 @@ A starter theme called Materials Direct.
 
 == Description ==
 
-Custom Theme for Materials Direct
+A materials-direct theme
 
 == Installation ==
 

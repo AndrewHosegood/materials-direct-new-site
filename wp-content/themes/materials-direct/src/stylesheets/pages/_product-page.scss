@@ -1,0 +1,23 @@
+.custom-price-calc {
+	margin-bottom: 2rem;
+}
+.custom-price-calc__label {
+	width: 50%; display:block;
+}
+.custom-price-calc__input {
+	padding: 0.5rem;
+}
+.single #generate_price {
+    background: black;
+    color: white;
+    border: 0;
+    padding: 1.1rem 1.9rem;
+    font-size: 1.1rem;
+	margin-bottom: 1rem;
+}
+.single .wp-block-woocommerce-product-price {
+	display: none;
+}
+.woocommerce div.product form.cart div.quantity {
+	display: none;
+} 

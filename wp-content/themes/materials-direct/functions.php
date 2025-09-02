@@ -176,12 +176,6 @@ if ( defined( 'JETPACK__VERSION' ) ) {
 	require get_template_directory() . '/inc/jetpack.php';
 }
 
-/**
- * Load WooCommerce compatibility file.
- */
-if ( class_exists( 'WooCommerce' ) ) {
-	require get_template_directory() . '/inc/woocommerce.php';
-}
 
 /* BEGIN CUSTOM FUNCTIONS */
 
@@ -192,6 +186,10 @@ require_once('includes/acf_global_options.php');
 // Generate and display PPP for testing
 require_once('includes/algorithm_and_core_functionality.php');
 // Generate and display PPP for testing
+
+// Display Ajax Page spinner
+require_once('includes/allow-svg-upload.php');
+// Display Ajax Page spinner
 
 // Display Ajax Page spinner
 // require_once('includes/page_load_spinner.php');
@@ -212,31 +210,3 @@ require_once('includes/algorithm_and_core_functionality.php');
 
 
 /* END CUSTOM FUNCTIONS */
-
-
-
-
-
-
-/*
-add_action('woocommerce_before_single_product', 'display_custom_inputs_on_product_page');
-function display_custom_inputs_on_product_page() {
-
-	global $product;
-
-	$sheet_length = $product->get_length();
-    $sheet_width = $product->get_width();
-	$part_length = isset($_POST['custom_length']) ? floatval($_POST['custom_length']) : 0;
-    $part_width = isset($_POST['custom_width']) ? floatval($_POST['custom_width']) : 0;
-	$edge_margin  = 2;     
-	$gap          = 4;     
-	$quantity = isset($_POST['custom_qty']) ? intval($_POST['custom_qty']) : 0;
-
-	echo $sheet_length . "<br>";
-	echo $sheet_width . "<br>";
-	echo $part_length . "<br>";
-	echo $part_width . "<br>";
-	echo $quantity . "<br>";
-
-}
-*/
