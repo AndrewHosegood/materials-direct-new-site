@@ -1,0 +1,1 @@
+/Applications/MAMP/htdocs/materials-direct-new-site/wp-content/plugins/query-monitor/wp-content/db.php

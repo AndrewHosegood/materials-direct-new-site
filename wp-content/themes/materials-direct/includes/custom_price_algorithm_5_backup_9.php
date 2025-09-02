@@ -231,9 +231,9 @@ function group_shipping_by_date($cart) {
         }
     }
 
-    echo "<pre>";
-    print_r($shipping_by_date);
-    echo "</pre>";
+    // echo "<pre>";
+    // print_r($shipping_by_date);
+    // echo "</pre>";
 
     return $shipping_by_date;
 }
@@ -304,6 +304,54 @@ function calculate_shipping_cost($total_del_weight, $country) {
     return 0;
 }
 
+/*
+function calculate_shipping_cost($total_del_weight, $country) {
+    if ($country === "United Kingdom") {
+        if ($total_del_weight >= 0 && $total_del_weight < 30) {
+            return 16.50;
+        } elseif ($total_del_weight >= 30 && $total_del_weight < 50) {
+            return 36.50;
+        } elseif ($total_del_weight >= 50) {
+            return 82.50;
+        }
+    } elseif ($country === "France" || $country === "Germany" || $country === "Monaco") {
+        if ($total_del_weight >= 0 && $total_del_weight < 1) {
+            return 54.18;
+        } elseif ($total_del_weight >= 1 && $total_del_weight < 1.5) {
+            return 61.86;
+        } elseif ($total_del_weight >= 1.5 && $total_del_weight < 2) {
+            return 65.86;
+        } elseif ($total_del_weight >= 2 && $total_del_weight < 2.5) {
+            return 69.54;
+        } elseif ($total_del_weight >= 2.5 && $total_del_weight < 3) {
+            return 73.34;
+        } elseif ($total_del_weight >= 3 && $total_del_weight < 3.5) {
+            return 77.46;
+        } elseif ($total_del_weight >= 3.5 && $total_del_weight < 4) {
+            return 81.22;
+        } elseif ($total_del_weight >= 4 && $total_del_weight < 4.5) {
+            return 85.20;
+        } elseif ($total_del_weight >= 4.5 && $total_del_weight < 5) {
+            return 88.98;
+        } elseif ($total_del_weight >= 5 && $total_del_weight < 10) {
+            return 92.94;
+        } elseif ($total_del_weight >= 10 && $total_del_weight < 26) {
+            return 126.48;
+        } elseif ($total_del_weight >= 26 && $total_del_weight < 30) {
+            return 202.10;
+        } elseif ($total_del_weight >= 30 && $total_del_weight < 50) {
+            return 221.50;
+        } elseif ($total_del_weight >= 50 && $total_del_weight < 70) {
+            return 322.42;
+        } elseif ($total_del_weight >= 70 && $total_del_weight < 100) {
+            return 423.40;
+        } elseif ($total_del_weight >= 100) {
+            return 603.40;
+        }
+    }
+    return 0;
+}
+    */
 // HELPER FUNCTION TO CALCULATE SHIPPING COST BASED ON TOTAL DELIVERY WEIGHT
 
 
@@ -429,7 +477,6 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
 
 
 // ADD ADDITIONAL FEE TO CART/CHECKOUT
-/*
 add_action('woocommerce_cart_calculate_fees', 'add_custom_shipping_fee');
 
 function add_custom_shipping_fee($cart) {
@@ -451,64 +498,8 @@ function add_custom_shipping_fee($cart) {
         $cart->add_fee('Shipping Total', $total_shipping, true);
     }
 }
-    */
 // ADD ADDITIONAL FEE TO CART/CHECKOUT
 
-
-
-
-// REGISTER CUSTOM SHIPPING METHOD
-add_action('woocommerce_shipping_init', 'init_custom_shipping_method');
-function init_custom_shipping_method() {
-    if (!class_exists('WC_Custom_Shipping_Method')) {
-        class WC_Custom_Shipping_Method extends WC_Shipping_Method {
-            public function __construct($instance_id = 0) {
-                $this->id = 'custom_shipping_method';
-                $this->instance_id = absint($instance_id);
-                $this->method_title = __('Custom Shipping', 'woocommerce');
-                $this->method_description = __('Custom shipping method for calculated shipping costs', 'woocommerce');
-                $this->supports = ['shipping-zones', 'instance-settings'];
-                $this->init();
-            }
-
-            public function init() {
-                $this->enabled = 'yes';
-                $this->title = __('Shipping Total', 'woocommerce');
-            }
-
-            public function calculate_shipping($package = []) {
-                $cart = WC()->cart;
-                $shipping_by_date = group_shipping_by_date($cart);
-
-                // Sum the shipping costs
-                $total_shipping = 0;
-                foreach ($shipping_by_date as $date => $data) {
-                    $total_shipping += floatval($data['final_shipping']);
-                }
-
-                if ($total_shipping > 0) {
-                    $this->add_rate([
-                        'id' => $this->id . ':' . $this->instance_id,
-                        'label' => $this->title,
-                        'cost' => $total_shipping,
-                        'taxes' => [], // Taxes can be calculated if needed
-                        'package' => $package,
-                    ]);
-                }
-            }
-        }
-    }
-}
-// END REGISTER CUSTOM SHIPPING METHOD
-
-
-// ADD CUSTOM SHIPPING METHOD TO WOOCOMMERCE
-add_filter('woocommerce_shipping_methods', 'add_custom_shipping_method');
-function add_custom_shipping_method($methods) {
-    $methods['custom_shipping_method'] = 'WC_Custom_Shipping_Method';
-    return $methods;
-}
-// END ADD CUSTOM SHIPPING METHOD TO WOOCOMMERCE
 
 
 // DISPLAY SHIPMENTS SECTION ABOVE CART TOTALS
@@ -553,51 +544,6 @@ function display_shipments_section_checkout() {
     }
 }
 // DISPLAY SHIPMENTS SECTION ABOVE CHECKOUT TOTALS
-
-
-
-
-
-// ENSURE SHIPPING RATE IS ADDED TO ORDER
-add_action('woocommerce_checkout_create_order', 'add_custom_shipping_to_order', 20, 2);
-function add_custom_shipping_to_order($order, $data) {
-    $cart = WC()->cart;
-    $shipping_by_date = group_shipping_by_date($cart);
-
-    // Sum the shipping costs
-    $total_shipping = 0;
-    foreach ($shipping_by_date as $date => $data) {
-        $total_shipping += floatval($data['final_shipping']);
-    }
-
-    if ($total_shipping > 0) {
-        $shipping_rate = new WC_Shipping_Rate(
-            'custom_shipping_rate',
-            'Shipping Total',
-            $total_shipping,
-            [],
-            'custom_shipping_method',
-            ''
-        );
-        $order->add_shipping($shipping_rate);
-    }
-
-    // Update shipping address from session
-    $shipping_address = WC()->session->get('custom_shipping_address');
-    if ($shipping_address && is_array($shipping_address)) {
-        $order->set_shipping_first_name(isset($data['billing_first_name']) ? $data['billing_first_name'] : '');
-        $order->set_shipping_last_name(isset($data['billing_last_name']) ? $data['billing_last_name'] : '');
-        $order->set_shipping_company(isset($data['billing_company']) ? $data['billing_company'] : '');
-        $order->set_shipping_address_1($shipping_address['street_address']);
-        $order->set_shipping_address_2(!empty($shipping_address['address_line2']) ? $shipping_address['address_line2'] : '');
-        $order->set_shipping_city($shipping_address['city']);
-        $order->set_shipping_state($shipping_address['county_state']);
-        $order->set_shipping_postcode($shipping_address['zip_postal']);
-        $order->set_shipping_country($shipping_address['country']);
-    }
-}
-// ENSURE SHIPPING RATE IS ADDED TO ORDER
-
 
 
 // SAVE SHEETS REQUIRED TO ORDER ITEM META
@@ -1050,3 +996,23 @@ function display_custom_inputs_on_product_page() {
 
 // DISPLAY CUSTOM INPUTS ON PRODUCT PAGE
 
+
+// ADD FUNCTION TO DISPLAY SHIPPING DIMENSIONS ON PRODUCT PAGE
+/*
+add_action('woocommerce_single_product_summary', 'display_product_shipping_dimensions', 20);
+
+function display_product_shipping_dimensions() {
+    global $product;
+    
+    $shipping_length = $product->get_length();
+    $shipping_width = $product->get_width();
+    $dimension_unit  = get_option('woocommerce_dimension_unit');
+    
+    if (!empty($shipping_length) && !empty($shipping_width)) {
+        $dimensions =  esc_html($shipping_length) . ' ' . esc_html(get_option('woocommerce_dimension_unit')) . ' x ' . esc_html($shipping_width) . ' ' . esc_html(get_option('woocommerce_dimension_unit'));
+        echo '<p class="product-dimensions">Stock sheet size: ' . $dimensions .  '</p>';
+    }
+
+}
+    */
+// ADD FUNCTION TO DISPLAY SHIPPING DIMENSIONS ON PRODUCT PAGE

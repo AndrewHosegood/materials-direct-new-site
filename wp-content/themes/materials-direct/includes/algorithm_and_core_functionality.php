@@ -188,7 +188,7 @@ function calculate_secure_price() {
 // ENQUEUE JS WITH NONCE
 add_action('wp_enqueue_scripts', function() {
     if (is_product()) {
-        wp_enqueue_script('custom-price-calc', get_stylesheet_directory_uri() . '/js/custom-price-calc-5.js', ['jquery'], null, true);
+        wp_enqueue_script('custom-price-calc', get_stylesheet_directory_uri() . '/js/algorithm-core-functionality.js', ['jquery'], null, true);
         wp_localize_script('custom-price-calc', 'ajax_params', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'product_id' => get_the_ID(),

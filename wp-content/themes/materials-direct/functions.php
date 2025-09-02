@@ -186,7 +186,11 @@ if ( class_exists( 'WooCommerce' ) ) {
 /* BEGIN CUSTOM FUNCTIONS */
 
 // Generate and display PPP for testing
-require_once('includes/custom_price_algorithm_5.php');
+require_once('includes/acf_global_options.php');
+// Generate and display PPP for testing
+
+// Generate and display PPP for testing
+require_once('includes/algorithm_and_core_functionality.php');
 // Generate and display PPP for testing
 
 // Display Ajax Page spinner
@@ -205,9 +209,6 @@ require_once('includes/custom_price_algorithm_5.php');
 // Calculate Nnmber Of Sheets Required
 //require_once('includes/display_order_object_on_thankyou_page.php');
 // Calculate Nnmber Of Sheets Required
-
-
-
 
 
 /* END CUSTOM FUNCTIONS */
