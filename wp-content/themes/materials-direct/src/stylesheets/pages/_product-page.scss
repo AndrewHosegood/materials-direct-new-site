@@ -1,20 +1,125 @@
+@use "../abstracts/breakpoints";
+@use "../abstracts/variables";
+
+.product-page {
+    &__title {
+        font-size: 2.1rem;
+        color: variables.$secondary-color;
+        padding: 0;
+        line-height: 2.4rem;
+    }
+    &__grey-panel {
+        background: #efefef;
+        padding: 1.1rem;
+        margin: 1.5rem 0;
+    }
+    &__calculate-price {
+        padding: .25rem 1rem;
+        border-radius: 2.2rem;
+        background: variables.$primary-color;
+        margin: .5rem .5rem .75rem 0;
+    }
+    &__input-wrap {
+        color: variables.$secondary-color;
+        width: 32.6%;
+        display: inline-block;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    &__input {
+        width: 100%;
+        display: block;
+        padding: .1rem 0.5rem;
+        font-weight: 400;
+    }
+    &__generate-price {
+        color: white;
+        padding: .25rem 1rem;
+        border-radius: 2.2rem;
+        background: variables.$primary-color;
+        margin: .5rem .5rem .75rem 0;
+        border: 0;
+        padding: 0.5rem 1rem;
+    }
+    &__label {
+        font-weight: 600;
+        color: variables.$secondary-color;
+        line-height: 1.5rem;
+    }
+    &__label-small-text {
+        font-style: italic;
+        font-weight: 400;
+        font-size: 0.76rem;
+        display: block;
+    }
+    &__calc-input {
+        margin:1rem 0;
+        padding: .5rem;
+        font-weight: 400;
+        font-size: 0.9rem;
+        background: white;
+        border: 1px solid #dedede;
+        width: 100%;
+    }
+    &__subheading {
+        color: variables.$secondary-color;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    &__display-price-outer {
+        border: 2px solid variables.$primary-color;
+        margin-top: 0.6rem;
+    }
+    &__display-price {
+        padding: 0.8rem;
+        color: variables.$primary-color;
+        font-weight: 700;
+    }
+    &__display-price-text {
+        color: variables.$secondary-color;
+    }
+    &__display-price-heading {
+        color: white;
+        margin: 0;
+        padding: 2px 19px;
+        font-size: 16.5px;
+        font-weight: 700;
+        background: variables.$primary-color
+    }
+}
+
+.woocommerce-page div.product div.summary {
+  width: 56%;
+}
+.woocommerce-page div.product div.images {
+  width: 40%;
+}
+.single-product div.product .stock {
+  color: #fff !important;
+  background: variables.$primary-color;
+  display: table-cell;
+  padding: 5px 20px;
+  border-radius: 20px;
+  margin-top: 1rem;
+  display: inline-block;
+}
 .custom-price-calc {
 	margin-bottom: 2rem;
 }
-.custom-price-calc__label {
-	width: 50%; display:block;
-}
+// .custom-price-calc__label {
+// 	width: 50%; display:block;
+// }
 .custom-price-calc__input {
 	padding: 0.5rem;
 }
-.single #generate_price {
-    background: black;
-    color: white;
-    border: 0;
-    padding: 1.1rem 1.9rem;
-    font-size: 1.1rem;
-	margin-bottom: 1rem;
-}
+// .single #generate_price {
+//     background: black;
+//     color: white;
+//     border: 0;
+//     padding: 1.1rem 1.9rem;
+//     font-size: 1.1rem;
+// 	margin-bottom: 1rem;
+// }
 .single .wp-block-woocommerce-product-price {
 	display: none;
 }

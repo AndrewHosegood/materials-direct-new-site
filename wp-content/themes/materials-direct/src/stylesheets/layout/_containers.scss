@@ -1,0 +1,48 @@
+@use "../abstracts/breakpoints";
+
+$mobile-width: 90%;
+$tablet-width: 85%;
+$laptop-width: 80%;
+$full-width: 95%;
+
+$max-width: 1150px;
+
+$extra-small-max-width: 750px;
+$small-max-width: 1000px;
+$large-max-width: 1500px;
+$extra-large-max-width: 1750px;
+
+.container {
+  width: $mobile-width;
+  max-width: $max-width;
+  margin: auto;
+
+  @include breakpoints.tablet {
+    width: $tablet-width;
+  }
+
+  @include breakpoints.laptop {
+    width: $laptop-width;
+  }
+
+  &--extra-small {
+    max-width: $extra-small-max-width;
+  }
+
+  &--small {
+    max-width: $small-max-width;
+  }
+
+  &--large {
+    max-width: $large-max-width;
+  }
+
+  &--extra-large {
+    max-width: $extra-large-max-width;
+  }
+
+  &--full-width {
+    width: $full-width;
+    max-width: unset;
+  }
+}

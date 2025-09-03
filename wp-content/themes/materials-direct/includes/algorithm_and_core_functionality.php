@@ -92,13 +92,14 @@ function custom_price_input_fields_prefill() {
     $country = !empty($shipping_address['country']) ? esc_attr($shipping_address['country']) : 'United Kingdom';
 
     echo '<div id="custom-price-calc" class="custom-price-calc">
-
         <!-- Price Inputs -->
-        <label class="custom-price-calc__label">Width (MM): <input class="custom-price-calc__input" type="number" id="input_width" name="custom_width" min="0.01" step="0.01" required></label>
-        <label class="custom-price-calc__label">Length (MM): <input class="custom-price-calc__input" type="number" id="input_length" name="custom_length" min="0.01" step="0.01" required></label>
-        <label class="custom-price-calc__label">Quantity: <input class="custom-price-calc__input" type="number" id="input_qty" name="custom_qty" value="1" min="1" step="1" required></label>
-        <label class="custom-price-calc__label">Delivery Time: 
-            <select class="custom-price-calc__input" id="input_discount_rate" name="custom_discount_rate">
+        <div class="product-page__grey-panel">
+        <label class="product-page__input-wrap">Width (MM): <input class="product-page__input" type="number" id="input_width" name="custom_width" min="0.01" step="0.01" required></label>
+        <label class="product-page__input-wrap">Length (MM): <input class="product-page__input" type="number" id="input_length" name="custom_length" min="0.01" step="0.01" required></label>
+        <label class="product-page__input-wrap">Quantity: <input class="product-page__input" type="number" id="input_qty" name="custom_qty" value="1" min="1" step="1" required></label>
+        </div>
+        <label class="custom-price-calc__label product-page__label">Despatched Within <span class="product-page__label-small-text">Only applies to available stock</span> 
+            <select class="custom-price-calc__input product-page__calc-input" id="input_discount_rate" name="custom_discount_rate">
                 <option value="0" selected="selected">24Hrs (working day)</option>
                 <option value="0.015">48Hrs (working days) (1.5% Discount)</option>
                 <option value="0.02">5 Days (working days) (2% Discount)</option>
@@ -110,7 +111,7 @@ function custom_price_input_fields_prefill() {
             </select>
         </label>
 
-        <button type="button" id="generate_price">Generate Price</button>
+        <button type="button" class="product-page__generate-price" id="generate_price">Calculate Price</button>
         <div id="price-spinner-overlay" style="display:none;">
             <div class="spinner-wrapper">
                 <img src="' . esc_url(get_theme_file_uri('/images/loading_md.gif')) . '" alt="Loading...">
@@ -121,12 +122,12 @@ function custom_price_input_fields_prefill() {
 
         <!-- Shipping Address Inputs -->
         <div id="shipping-address-form">
-            <h3>Shipping Address</h3>
-            <label class="custom-price-calc__label">Street Address: <input type="text" id="input_street_address" name="custom_street_address" value="' . $street_address . '" required></label>
-            <label class="custom-price-calc__label">Address Line 2: <input type="text" id="input_address_line2" name="custom_address_line2" value="' . $address_line2 . '"></label>
-            <label class="custom-price-calc__label">City: <input type="text" id="input_city" name="custom_city" value="' . $city . '" required></label>
-            <label class="custom-price-calc__label">County/State: <input type="text" id="input_county_state" name="custom_county_state" value="' . $county_state . '" required></label>
-            <label class="custom-price-calc__label">ZIP/Postal Code: <input type="text" id="input_zip_postal" name="custom_zip_postal" value="' . $zip_postal . '" required></label>
+            <h3 class="product-page__subheading">Item(s) shipping address</h3>
+            <label class="custom-price-calc__label">Street Address: <input class="product-page__calc-input" type="text" id="input_street_address" name="custom_street_address" value="' . $street_address . '" required></label>
+            <label class="custom-price-calc__label">Address Line 2: <input class="product-page__calc-input" type="text" id="input_address_line2" name="custom_address_line2" value="' . $address_line2 . '"></label>
+            <label class="custom-price-calc__label">City: <input class="product-page__calc-input" type="text" id="input_city" name="custom_city" value="' . $city . '" required></label>
+            <label class="custom-price-calc__label">County/State: <input class="product-page__calc-input" type="text" id="input_county_state" name="custom_county_state" value="' . $county_state . '" required></label>
+            <label class="custom-price-calc__label">ZIP/Postal Code: <input class="product-page__calc-input" type="text" id="input_zip_postal" name="custom_zip_postal" value="' . $zip_postal . '" required></label>
             <label class="custom-price-calc__label">Country: 
                 <select id="input_country" name="custom_country" required>
                     <option value="United Kingdom"' . selected($country, 'United Kingdom', false) . '>United Kingdom</option>

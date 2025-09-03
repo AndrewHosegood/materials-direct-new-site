@@ -11,3 +11,18 @@
 //     color: red !important;
 //  }
 
+.menu-toggle {
+    display:none;
+}
+
+/* Google Reviews Widget */
+.wp-gr:not(.wp-dark) .grw-review-inner.grw-backgnd {
+    background: transparent !important;
+}
+.wp-gr.wpac .wp-google-name a {
+    color: white !important;
+}
+.wp-gr .wp-google-based, .wp-gr .wp-google-powered {
+    color: #666 !important;
+}
+/* Google Reviews Widget */

@@ -26,27 +26,45 @@
 	<a class="skip-link screen-reader-text" href="#primary"><?php esc_html_e( 'Skip to content', 'materials-direct' ); ?></a>
 
 	<header id="masthead" class="header">
+
 		<div class="header__top">
-			<ul class="header__contact-details">
-					<li class="header__phone"><i class="header__icon-phone"></i><a href="tel:+44(0)1908222211">+44 (0)1908 222 211</a></li>
-					<li class="header__mail"><i class="header__icon-mail-line"></i><a href="mailto:info@materials-direct.com"> info@materials-direct.com</a></li>				
-			</ul>
-		</div>
-		<div class="site-branding header__left">
-			<?php the_custom_logo(); ?>
-		</div>
-		<div class="header__right">
-			<nav id="site-navigation" class="main-navigation">
-				<button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false"><?php esc_html_e( 'Primary Menu', 'materials-direct' ); ?></button>
+			<div class="container header__container">
+				<ul class="header__contact-details">
+						<li class="header__phone"><i class="fa-solid fa-phone-flip header__icon-phone"></i><a href="tel:+44(0)1908222211">+44 (0)1908 222 211</a></li>
+						<li class="header__mail"><i class="fa-regular fa-envelope header__icon-email"></i><a href="mailto:info@materials-direct.com"> info@materials-direct.com</a></li>				
+				</ul>
 				<?php
 				wp_nav_menu(
 					array(
-						'theme_location' => 'menu-1',
-						'menu_id'        => 'primary-menu',
+						'theme_location' => 'action-bar-top-right',
+						'menu_id'        => 'action-bar-top-right',
+						'container'      => false,
+						'menu_class'     => 'header__menu-right',
 					)
 				);
 				?>
-			</nav>
-			<?php echo do_shortcode('[ivory-search id="112" title="Custom Search Form"]'); ?>
+			</div>
 		</div>
+
+		<div class="container header__main-container">		
+			<div class="site-branding header__left">
+				<?php the_custom_logo(); ?>
+			</div>
+			<div class="header__right">
+				<nav id="site-navigation" class="main-navigation">
+					<button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false"><?php esc_html_e( 'Primary Menu', 'materials-direct' ); ?></button>
+					<?php
+					wp_nav_menu(
+						array(
+							'theme_location' => 'menu-1',
+							'menu_id'        => 'primary-menu',
+							'menu_class'     => 'header__main-menu',
+						)
+					);
+					?>
+				</nav>
+				<?php echo do_shortcode('[ivory-search id="112" title="Custom Search Form"]'); ?>
+			</div>
+		</div>
+
 	</header><!-- #masthead -->

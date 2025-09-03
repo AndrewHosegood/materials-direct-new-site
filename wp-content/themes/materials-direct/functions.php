@@ -50,6 +50,11 @@ function materials_direct_setup() {
 	register_nav_menus(
 		array(
 			'menu-1' => esc_html__( 'Primary', 'materials-direct' ),
+			'action-bar-top-right' => esc_html__( 'action-bar-top-right', 'materials-direct' ),
+			'manufacturing-services' => esc_html__( 'manufacturing-services', 'materials-direct' ),
+			'service-sectors' => esc_html__( 'service-sectors', 'materials-direct' ),
+			'useful-links' => esc_html__( 'useful-links', 'materials-direct' ),
+			'page-navigation' => esc_html__( 'page-navigation', 'materials-direct' ),
 		)
 	);
 
@@ -138,6 +143,7 @@ add_action( 'widgets_init', 'materials_direct_widgets_init' );
  * Enqueue scripts and styles.
  */
 function materials_direct_scripts() {
+
 	wp_enqueue_style( 'materials-direct-style', get_stylesheet_uri(), array(), _S_VERSION );
 	wp_style_add_data( 'materials-direct-style', 'rtl', 'replace' );
 
@@ -146,6 +152,9 @@ function materials_direct_scripts() {
 	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
 		wp_enqueue_script( 'comment-reply' );
 	}
+
+	wp_enqueue_style( 'font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css', array(), '6.6.0' );
+
 }
 add_action( 'wp_enqueue_scripts', 'materials_direct_scripts' );
 
@@ -208,5 +217,10 @@ require_once('includes/allow-svg-upload.php');
 //require_once('includes/display_order_object_on_thankyou_page.php');
 // Calculate Nnmber Of Sheets Required
 
+// Calculate Nnmber Of Sheets Required
+require_once('includes/reposition-product-title-on-product-page.php');
+// Calculate Nnmber Of Sheets Required
 
 /* END CUSTOM FUNCTIONS */
+
+
