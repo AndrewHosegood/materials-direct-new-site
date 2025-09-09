@@ -78,9 +78,16 @@ function calculate_product_price($product_id, $width, $length, $qty, $discount_r
 add_action('woocommerce_before_add_to_cart_button', 'custom_price_input_fields_prefill');
 function custom_price_input_fields_prefill() {
     global $product;
-    $product_id = $product->get_id();
 
-    // Get shipping address from session
+    // Get the ACF field value
+    $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product->get_id()) : false;
+
+    // If is_product_single is true, skip the custom form and rely on default WooCommerce behavior
+    if ($is_product_single) {
+        return; // Exit early to display default WooCommerce form
+    }
+
+    $product_id = $product->get_id();
     $shipping_address = WC()->session->get('custom_shipping_address', []);
 
     $street_address = !empty($shipping_address['street_address']) ? esc_attr($shipping_address['street_address']) : '';
@@ -151,6 +158,24 @@ function calculate_secure_price() {
     check_ajax_referer('custom_price_nonce', 'nonce');
 
     $product_id = intval($_POST['product_id']);
+    $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
+
+    // If is_product_single is true, return the default WooCommerce price
+    if ($is_product_single) {
+        $product = wc_get_product($product_id);
+        if (!$product) {
+            wp_send_json_error(['message' => 'Invalid product ID.']);
+            return;
+        }
+        $price = $product->get_price(); // Get default WooCommerce price
+        wp_send_json_success([
+            'price' => round($price, 2),
+            'per_part' => round($price, 2), // No per-part calculation needed
+            'sheets_required' => 1 // Default to 1 sheet for single products
+        ]);
+        return;
+    }
+
     $width = floatval($_POST['width']);
     $length = floatval($_POST['length']);
     $qty = intval($_POST['qty']);
@@ -214,7 +239,7 @@ function calculate_secure_price() {
     wp_send_json_success([
         'price' => round($total_price, 2),
         'per_part' => round($per_part_price, 2),
-        'sheets_required' => $sheets_required //hardcoded value for now
+        'sheets_required' => $sheets_required 
     ]);
 }
 // SECURE PRICE CALCULATION IN PHP
@@ -347,6 +372,13 @@ function calculate_shipping_cost($total_del_weight, $country) {
 // CREATE CART ITEM DATA AND STORE AS SESSION
 add_filter('woocommerce_add_cart_item_data', 'add_custom_price_cart_item_data_secure', 10, 2);
 function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
+    $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
+
+    // If is_product_single is true, skip custom inputs
+    if ($is_product_single) {
+        return $cart_item_data; // Use default WooCommerce behavior
+    }
+
     // Check if all required POST fields are set
     if (
         !isset($_POST['custom_width']) ||
@@ -646,6 +678,13 @@ function save_sheets_required_to_order_item($item, $cart_item_key, $values, $ord
 // SHOW DATA IN CART AND CHECKOUT
 add_filter('woocommerce_get_item_data', 'show_custom_input_details_in_cart', 10, 2);
 function show_custom_input_details_in_cart($item_data, $cart_item) {
+    $product_id = $cart_item['product_id'];
+    $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
+
+    if ($is_product_single) {
+        return $item_data; // Skip custom inputs for single products
+    }
+
     if (!empty($cart_item['custom_inputs'])) {
         // Width
         if (isset($cart_item['custom_inputs']['width'])) {
@@ -720,9 +759,17 @@ add_action('woocommerce_before_calculate_totals', 'apply_secure_custom_price');
 function apply_secure_custom_price($cart) {
     if (is_admin() && !defined('DOING_AJAX')) return;
 
+
     foreach ($cart->get_cart() as $cart_item) {
+        $product_id = $cart_item['product_id'];
+        $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
+
+        // Skip custom pricing for products where is_product_single is true
+        if ($is_product_single) {
+            continue; // Use default WooCommerce price
+        }
+
         if (isset($cart_item['custom_inputs'])) {
-            $product_id = $cart_item['product_id'];
             $width = $cart_item['custom_inputs']['width'];
             $length = $cart_item['custom_inputs']['length'];
             $qty = $cart_item['custom_inputs']['qty'];
@@ -731,13 +778,10 @@ function apply_secure_custom_price($cart) {
 
             $total_price = calculate_product_price($product_id, $width, $length, $qty, $discount_rate);
 
-            $total_price_2 = $total_price / $sheets_required;
-            //$total_price_2 = $sheets_required;
-            //$total_price_2 = $total_price;
 
             // SEND PRICE TO CART
             if (!is_wp_error($total_price)) {
-                //$cart_item['data']->set_price($total_price);
+                $total_price_2 = $total_price / $sheets_required;
                 $cart_item['data']->set_price($total_price_2);
             }
         }
@@ -959,6 +1003,17 @@ function display_custom_inputs_on_product_page() {
     global $product;
 
     $product_id = $product->get_id();
+    $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
+
+    if ($is_product_single) {
+        // Display minimal info for single products
+        echo '<div class="custom-product-info" style="margin-bottom: 20px;">';
+        echo '<h3>Product Details</h3>';
+        echo '<p><strong>Price:</strong> ' . wc_price($product->get_price()) . '</p>';
+        echo '</div>';
+        return;
+    }
+
     $sheet_length_mm = $product->get_length() * 10; // cm → mm
     $sheet_width_mm = $product->get_width() * 10;   // cm → mm
     $part_length_mm = isset($_POST['custom_length']) ? floatval($_POST['custom_length']) : 0;
@@ -1072,3 +1127,12 @@ function display_custom_inputs_on_product_page() {
 
 // DISPLAY CUSTOM INPUTS ON PRODUCT PAGE
 
+
+// ADD HIDDEN FIELD FOR IS_PRODUCT_SINGLE
+add_action('woocommerce_before_single_product', 'add_is_product_single_hidden_field');
+function add_is_product_single_hidden_field() {
+    global $product;
+    $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product->get_id()) : false;
+    echo '<input type="hidden" name="is_product_single" value="' . ($is_product_single ? '1' : '0') . '">';
+}
+// ADD HIDDEN FIELD FOR IS_PRODUCT_SINGLE
