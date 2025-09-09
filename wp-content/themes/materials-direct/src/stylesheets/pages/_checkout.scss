@@ -1,0 +1,47 @@
+@use "../abstracts/breakpoints";
+@use "../abstracts/variables";
+
+.woocommerce-checkout {
+    & .entry-header {
+        display: none;
+    }
+    & #payment {
+        background: none;
+        border-radius: 5px;
+    }
+    & #payment p {
+        padding: 0;
+        font-size: 0.9rem;
+        line-height: 1.4rem;
+    }
+    & #payment a {
+        font-weight: 700;
+        color: variables.$primary-color;
+    }
+    & #payment .woocommerce-privacy-policy-text {
+        margin-bottom: 1rem;
+    }
+    & .cart_totals__shipment {
+        padding: 0;
+    }
+    & .cart_totals__shipment-details {
+        padding: 0;
+    }
+    & #order_review_heading {
+        display:none;
+    }
+}
+
+.woocommerce #payment #place_order, .woocommerce-page #payment #place_order {
+    background: variables.$secondary-color;
+    border-radius: 0;
+    font-weight: 400;
+    padding: 0.95rem 1.7rem;
+    float: left;
+    margin: 1rem 0;
+}
+.payment_box p {
+    padding: 0;
+    font-size: 0.9rem;
+    line-height: 1.4rem;
+}

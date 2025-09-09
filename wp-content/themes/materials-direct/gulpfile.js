@@ -10,6 +10,11 @@ const fs = require("fs");
 const path = require("path");
 
 // ---------------------------
+// TO RUN: npx gulp
+// ---------------------------
+
+
+// ---------------------------
 // CONFIGURATION
 // ---------------------------
 
@@ -17,7 +22,7 @@ const path = require("path");
 const paths = {
   styles: {
     src: "src/stylesheets/main.scss",
-    dest: "./"
+    dest: "css" // <- change output to css folder
   },
   scripts: {
     src: "src/scripts/javascript.js",
@@ -32,7 +37,8 @@ const isProduction = process.env.NODE_ENV === "production";
 // HELPERS
 // ---------------------------
 
-// Grab WordPress theme header from style.css (preserve it in output)
+// Grab WordPress theme header from style.css (optional if needed)
+/*
 function getThemeHeader() {
   const file = path.join(__dirname, "style.css");
   if (fs.existsSync(file)) {
@@ -42,6 +48,7 @@ function getThemeHeader() {
   }
   return "";
 }
+  */
 
 // ---------------------------
 // TASKS
@@ -49,7 +56,7 @@ function getThemeHeader() {
 
 // Compile SCSS -> CSS
 function styles() {
-  const themeHeader = getThemeHeader();
+  //const themeHeader = getThemeHeader(); // You may remove this if not injecting WP theme headers anymore
 
   let pipeline = gulp.src(paths.styles.src);
 
@@ -58,12 +65,12 @@ function styles() {
   pipeline = pipeline
     .pipe(sass().on("error", sass.logError))
     .pipe(cleanCSS({ compatibility: "ie11" }))
-    .pipe(header(themeHeader))
-    .pipe(rename("style.css"));
+    //.pipe(header(themeHeader)) // Remove this line if no header needed
+    .pipe(rename("main.css")); // <- change output filename
 
   if (!isProduction) pipeline = pipeline.pipe(sourcemaps.write("./"));
 
-  return pipeline.pipe(gulp.dest(paths.styles.dest));
+  return pipeline.pipe(gulp.dest(paths.styles.dest)); // <- writes to css/
 }
 
 // Minify JS

@@ -1,0 +1,14 @@
+
+@use "../abstracts/breakpoints";
+@use "../abstracts/variables";
+
+.woocommerce form .form-row label {
+    font-weight: 600;
+}
+.woocommerce form .form-row .input-text, .woocommerce form .form-row select {
+    border: 1px solid variables.$grey-300;
+    color: #999;
+}
+.select2-container .select2-dropdown, .select2-container .select2-selection {
+    border: 1px solid variables.$grey-300;
+}

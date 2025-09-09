@@ -155,8 +155,17 @@ function materials_direct_scripts() {
 
 	wp_enqueue_style( 'font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css', array(), '6.6.0' );
 
+	// ✅ Enqueue main.css after WooCommerce styles
+	wp_enqueue_style(
+		'materials-direct-main', // Handle
+		get_template_directory_uri() . '/css/main.css', // Path to main.css
+		array( 'woocommerce-general' ), // Dependency
+		'1.0', // Version
+		'all' // Media
+	);
+
 }
-add_action( 'wp_enqueue_scripts', 'materials_direct_scripts' );
+add_action( 'wp_enqueue_scripts', 'materials_direct_scripts', 20 );
 
 /**
  * Implement the Custom Header feature.
@@ -217,10 +226,82 @@ require_once('includes/allow-svg-upload.php');
 //require_once('includes/display_order_object_on_thankyou_page.php');
 // Calculate Nnmber Of Sheets Required
 
-// Calculate Nnmber Of Sheets Required
+// Reposition product title on product page
 require_once('includes/reposition-product-title-on-product-page.php');
-// Calculate Nnmber Of Sheets Required
+// Reposition product title on product page
+
+// remove different shipping address option on checkout page
+require_once('includes/checkout-remove-different-shipping-address.php');
+// remove different shipping address option on checkout page
 
 /* END CUSTOM FUNCTIONS */
+
+add_action( 'woocommerce_after_add_to_cart_quantity', 'add_discount_charts_to_product_page' );
+function add_discount_charts_to_product_page() {
+echo '<table class="product-page__discount-table">
+<thead>
+<tr><th class="product-page__discount-table-heading">Order Total</th>
+<th class="product-page__discount-table-heading">Discount</th>
+</tr></thead>
+<tbody>
+<tr>
+<td class="product-page__discount-table-content">£1 - £500</td>
+<td class="product-page__discount-table-content"><b>N/A</b></td>
+</tr>
+<tr>
+<td class="product-page__discount-table-content">£501 - £1000</td>
+<td class="product-page__discount-table-content"><b>1% discount</b></td>
+</tr>
+<tr>
+<td class="product-page__discount-table-content">£1001 - £2500</td>
+<td class="product-page__discount-table-content"><b>2% discount</b></td>
+</tr>
+<tr>
+<td class="product-page__discount-table-content">£2501 - £5000</td>
+<td class="product-page__discount-table-content"><b>3% discount</b></td>
+</tr>
+<tr>
+<td class="product-page__discount-table-content">£5001 - £10000</td>
+<td class="product-page__discount-table-content"><b>4% discount</b></td>
+</tr>
+<tr>
+<td class="product-page__discount-table-content">£10001 - £25000</td>
+<td class="product-page__discount-table-content"><b>5% discount</b></td>
+</tr>
+<tr>
+<td class="product-page__discount-table-content">£25001 - £50000</td>
+<td class="product-page__discount-table-content"><b>7.5% discount</b></td>
+</tr>
+<tr>
+<td class="product-page__discount-table-content">£50001+</td>
+<td class="product-page__discount-table-content"><b>10% discount</b></td>
+</tr>
+</tbody>
+</table>';
+}
+
+
+
+// Display the ACF "is_product_single" field at the top of the product page
+add_action( 'woocommerce_before_single_product', 'display_is_product_single_field' );
+
+function display_is_product_single_field() {
+    global $post;
+
+    if ( function_exists('get_field') ) {
+        $is_product_single = get_field( 'is_product_single', $post->ID );
+
+        if ( $is_product_single ) {
+            echo '<div class="acf-is-product-single" style="padding:10px; background:#f9f9f9; margin-bottom:15px;">';
+            echo '<strong>Is Product Single:</strong> Yes';
+            echo '</div>';
+        } else {
+            echo '<div class="acf-is-product-single" style="padding:10px; background:#f9f9f9; margin-bottom:15px;">';
+            echo '<strong>Is Product Single:</strong> No';
+            echo '</div>';
+        }
+    }
+}
+
 
 

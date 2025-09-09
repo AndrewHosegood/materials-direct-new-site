@@ -1,4 +1,5 @@
 @use "../abstracts/breakpoints";
+@use "../abstracts/variables";
 
 //@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400&display=swap');
 //@import url('//fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
@@ -8,7 +9,7 @@ $footer-font-family: "Poppins", sans-serif;
 
 $heading-font-family: inherit;
 
-$primary-text-color: #000000;
+$primary-text-color: variables.$secondary-color;
 
 $light-text: #ffffff;
 $dark-text: #131313;
@@ -78,7 +79,7 @@ address {
   padding: 0.75rem 0;
   font-size: 19px;
   @include breakpoints.tablet {
-    font-size: 25px;
+    font-size: 35px;
     padding: 1rem 0;
   }
 }

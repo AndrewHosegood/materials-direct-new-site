@@ -9,6 +9,7 @@
 @use "base/typography";
 
 @use "components/spinner";
+@use "components/form-elements";
 //@use "components/button";
 //@use "components/mainmenu";
 
@@ -17,5 +18,7 @@
 @use "layout/containers";
 
 @use "pages/product-page";
+@use "pages/cart";
+@use "pages/checkout";
 
 @use "shame/shame";

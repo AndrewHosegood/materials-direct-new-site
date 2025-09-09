@@ -1,0 +1,1 @@
+{"version":3,"sources":["javascript.js"],"names":["jQuery","document","ready","$","alert"],"mappings":"AAAAA,OAAAC,QAAA,EAAAC,MAAA,SAAAC,GACAC,MAAA,eAAA,CACA,CAAA","file":"scripts.js","sourcesContent":["jQuery(document).ready(function($){\n    alert(\"Hello World!!\");\n}); "]}
