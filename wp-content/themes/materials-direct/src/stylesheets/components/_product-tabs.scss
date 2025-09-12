@@ -1,0 +1,36 @@
+.woocommerce-tabs {
+    position: relative;
+    padding: 0 0 2.5rem 0;
+    &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        background: #f1f0f0;
+        width: 240vw;
+        z-index: -1;
+        height: 100%;
+        left: -50%;
+    }
+}
+
+.woocommerce div.product .woocommerce-tabs ul.tabs li a {
+    display: inline-block;
+    padding: 3em 0.5rem .5em 0.5rem;
+    font-weight: 700;
+    color: #515151;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.woocommerce div.product .woocommerce-tabs ul.tabs li {
+    border: 0px solid #cfc8d8;
+    background-color: transparent;
+    color: #515151;
+    display: inline-block;
+    position: relative;
+    z-index: 0;
+    border-radius: 0;
+    margin: 0 -5px;
+    padding: 0 1em;
+}

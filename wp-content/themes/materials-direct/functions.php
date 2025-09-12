@@ -209,23 +209,6 @@ require_once('includes/algorithm_and_core_functionality.php');
 require_once('includes/allow-svg-upload.php');
 // Display Ajax Page spinner
 
-// Display Ajax Page spinner
-// require_once('includes/page_load_spinner.php');
-// Display Ajax Page spinner
-
-// Display Stock Sheet Sizes On Product Page
-//require_once('includes/custom-shipping-calculation.php');
-// Display Stock Sheet Sizes On Product Page
-
-// Calculate Nnmber Of Sheets Required
-//require_once('includes/number-of-sheets-required.php');
-// Calculate Nnmber Of Sheets Required
-
-
-// Calculate Nnmber Of Sheets Required
-//require_once('includes/display_order_object_on_thankyou_page.php');
-// Calculate Nnmber Of Sheets Required
-
 // Reposition product title on product page
 require_once('includes/reposition-product-title-on-product-page.php');
 // Reposition product title on product page
@@ -234,114 +217,33 @@ require_once('includes/reposition-product-title-on-product-page.php');
 require_once('includes/checkout-remove-different-shipping-address.php');
 // remove different shipping address option on checkout page
 
+// remove different shipping address option on checkout page
+require_once('includes/add-discount-chart-to-product-page.php');
+// remove different shipping address option on checkout page
+
+// Inject custom css in header for is_single_product
+require_once('includes/inject-custom-css-in-head-for-issingleproduct.php');
+// Inject custom css in header for is_single_product
+
+// Add dab terms to checkout 
+require_once('includes/add-dap-terms-to-checkout.php');
+// Add dab terms to checkout
+
+// Prevent duplicate orders merging in the cart
+require_once('includes/prevent-duplicate-order-merge.php');
+// Prevent duplicate orders merging in the cart
+
+// Related products styling
+require_once('includes/related-products-styling.php');
+// Related products styling
+
+// Custom product page tabs
+require_once('includes/custom-product-tabs.php');
+// Custom product page tabs
+
 /* END CUSTOM FUNCTIONS */
 
-add_action( 'woocommerce_after_add_to_cart_quantity', 'add_discount_charts_to_product_page' );
-function add_discount_charts_to_product_page() {
-echo '<table class="product-page__discount-table">
-<thead>
-<tr><th class="product-page__discount-table-heading">Order Total</th>
-<th class="product-page__discount-table-heading">Discount</th>
-</tr></thead>
-<tbody>
-<tr>
-<td class="product-page__discount-table-content">£1 - £500</td>
-<td class="product-page__discount-table-content"><b>N/A</b></td>
-</tr>
-<tr>
-<td class="product-page__discount-table-content">£501 - £1000</td>
-<td class="product-page__discount-table-content"><b>1% discount</b></td>
-</tr>
-<tr>
-<td class="product-page__discount-table-content">£1001 - £2500</td>
-<td class="product-page__discount-table-content"><b>2% discount</b></td>
-</tr>
-<tr>
-<td class="product-page__discount-table-content">£2501 - £5000</td>
-<td class="product-page__discount-table-content"><b>3% discount</b></td>
-</tr>
-<tr>
-<td class="product-page__discount-table-content">£5001 - £10000</td>
-<td class="product-page__discount-table-content"><b>4% discount</b></td>
-</tr>
-<tr>
-<td class="product-page__discount-table-content">£10001 - £25000</td>
-<td class="product-page__discount-table-content"><b>5% discount</b></td>
-</tr>
-<tr>
-<td class="product-page__discount-table-content">£25001 - £50000</td>
-<td class="product-page__discount-table-content"><b>7.5% discount</b></td>
-</tr>
-<tr>
-<td class="product-page__discount-table-content">£50001+</td>
-<td class="product-page__discount-table-content"><b>10% discount</b></td>
-</tr>
-</tbody>
-</table>';
-}
-
-
-
-// Display the ACF "is_product_single" field at the top of the product page
-add_action( 'woocommerce_before_single_product', 'display_is_product_single_field' );
-
-function display_is_product_single_field() {
-    global $post;
-
-    if ( function_exists('get_field') ) {
-        $is_product_single = get_field( 'is_product_single', $post->ID );
-
-        if ( $is_product_single ) {
-            echo '<div class="acf-is-product-single" style="padding:10px; background:#f9f9f9; margin-bottom:15px;">';
-            echo '<strong>Is Product Single:</strong> Yes';
-            echo '</div>';
-        } else {
-            echo '<div class="acf-is-product-single" style="padding:10px; background:#f9f9f9; margin-bottom:15px;">';
-            echo '<strong>Is Product Single:</strong> No';
-            echo '</div>';
-        }
-    }
-}
-
-
-
-
-
-
-add_action('wp_head', 'inject_custom_css_for_single_product');
-function inject_custom_css_for_single_product() {
-    // Check if we're on a product page
-    if (is_product()) {
-        global $post;
-
-        // Ensure $post is available and has an ID
-        if (!is_a($post, 'WP_Post') || !isset($post->ID)) {
-            return; // Exit early if $post is not valid
-        }
-
-        // Get the product object
-        $product = wc_get_product($post->ID);
-        
-        // Ensure $product is a valid WC_Product object
-        if (!is_a($product, 'WC_Product')) {
-            return; // Exit early if $product is not valid
-        }
-
-        // Get the is_product_single ACF field value
-        $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product->get_id()) : false;
-
-        // Inject CSS if is_product_single is true
-        if ($is_product_single) {
-            echo '<style type="text/css">
-                .woocommerce div.product form.cart div.quantity {
-                    display: block;
-                }
-            </style>';
-        }
-    }
-}
-
-
-
-
+// Temporary - display acf is_single_product on product page
+//require_once('includes/display-is-single-product-on-product-page.php');
+// Temporary - display acf is_single_product on product page
 

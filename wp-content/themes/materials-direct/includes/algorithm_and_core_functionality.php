@@ -424,6 +424,15 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
 
     $delivery_time = isset($discount_labels[(string)$discount_rate]) ? $discount_labels[(string)$discount_rate] : 'Unknown';
 
+    // Construct despatch notes
+    $despatch_notes = sprintf(
+        '%d parts to be despatched in %s',
+        $quantity,
+        $delivery_time
+    );
+
+
+
     if($delivery_time === "24Hrs (working day)"){
         $shipments = date('d/m/Y', strtotime(' + 1 days'));
     } elseif($delivery_time === "48Hrs (working days) (1.5% Discount)"){
@@ -473,9 +482,10 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
         'price' => floatval($_POST['custom_price']),
         'discount_rate' => floatval($_POST['custom_discount_rate']),
         'sheets_required' => $sheet_result['sheets_required'],
-        'final_shipping' => $final_shipping, // Store final_shipping
+        'final_shipping' => $final_shipping,
         'shipments' => $shipments,
         'total_del_weight' => $total_del_weight,
+        'despatch_notes' => $despatch_notes, // Add despatch notes
         'shipping_address' => [
             'street_address' => sanitize_text_field($_POST['custom_street_address']),
             'address_line2' => sanitize_text_field($_POST['custom_address_line2']),
@@ -621,6 +631,7 @@ function display_shipments_section_checkout() {
 
 
 // ENSURE SHIPPING RATE IS ADDED TO ORDER
+
 add_action('woocommerce_checkout_create_order', 'add_custom_shipping_to_order', 20, 2);
 function add_custom_shipping_to_order($order, $data) {
     $cart = WC()->cart;
@@ -658,11 +669,12 @@ function add_custom_shipping_to_order($order, $data) {
         $order->set_shipping_country($shipping_address['country']);
     }
 }
+
 // ENSURE SHIPPING RATE IS ADDED TO ORDER
 
 
 
-// SAVE SHEETS REQUIRED TO ORDER ITEM META
+// SAVE ALL RELEVANT DATA TO ORDER ITEM META
 add_action('woocommerce_checkout_create_order_line_item', 'save_sheets_required_to_order_item', 10, 4);
 function save_sheets_required_to_order_item($item, $cart_item_key, $values, $order) {
     if (isset($values['custom_inputs']['sheets_required'])) {
@@ -671,8 +683,11 @@ function save_sheets_required_to_order_item($item, $cart_item_key, $values, $ord
     if (isset($values['custom_inputs']['shipping_address'])) {
         $item->add_meta_data('custom_shipping_address', $values['custom_inputs']['shipping_address'], true);
     }
+    if (isset($values['custom_inputs']['despatch_notes'])) {
+        $item->add_meta_data('despatch_notes', $values['custom_inputs']['despatch_notes'], true);
+    }
 }
-// SAVE SHEETS REQUIRED TO ORDER ITEM META
+// SAVE ALL RELEVANT DATA TO ORDER ITEM META
 
 
 // SHOW DATA IN CART AND CHECKOUT
@@ -686,6 +701,7 @@ function show_custom_input_details_in_cart($item_data, $cart_item) {
     }
 
     if (!empty($cart_item['custom_inputs'])) {
+
         // Width
         if (isset($cart_item['custom_inputs']['width'])) {
             $item_data[] = [
@@ -710,6 +726,24 @@ function show_custom_input_details_in_cart($item_data, $cart_item) {
             ];
         }
 
+        // Despatch Notes
+        if (isset($cart_item['custom_inputs']['despatch_notes'])) {
+            $item_data[] = [
+                'name' => 'Despatch Notes',
+                'value' => $cart_item['custom_inputs']['despatch_notes']
+            ];
+        }
+
+        // Total Del Weights
+        if (isset($cart_item['custom_inputs']['total_del_weight'])) {
+            $item_data[] = [
+                'name' => 'Customer Shipping Weight(s)',
+                'value' => round((float)$cart_item['custom_inputs']['total_del_weight'], 3) . "kg"
+            ];
+        }
+
+        //'total_del_weight' => $total_del_weight,
+
         // Custom Price
         // if (isset($cart_item['custom_inputs']['price'])) {
         //     $item_data[] = [
@@ -719,6 +753,7 @@ function show_custom_input_details_in_cart($item_data, $cart_item) {
         // }
 
         // Delivery Time / Discount Rate
+        /*
         if (isset($cart_item['custom_inputs']['discount_rate'])) {
             $discount_labels = [
                 '0' => '24Hrs (working day)',
@@ -736,14 +771,16 @@ function show_custom_input_details_in_cart($item_data, $cart_item) {
                 'value' => isset($discount_labels[$rate_key]) ? $discount_labels[$rate_key] : 'Unknown'
             ];
         }
-
+        */
         // Sheets Required
+        /*
         if (isset($cart_item['custom_inputs']['sheets_required'])) {
             $item_data[] = [
                 'name' => 'Sheets Required',
                 'value' => $cart_item['custom_inputs']['sheets_required']
             ];
         }
+        */
     }
     return $item_data;
 }
@@ -802,32 +839,50 @@ function display_shipping_address_on_thankyou($order_id) {
 
     $order = wc_get_order($order_id);
     $shipping_address = false;
+    $despatch_notes = false;
 
     foreach ($order->get_items() as $item_id => $item) {
         $custom_shipping_address = $item->get_meta('custom_shipping_address');
+        $item_despatch_notes = $item->get_meta('despatch_notes');
         if ($custom_shipping_address && is_array($custom_shipping_address)) {
             $shipping_address = $custom_shipping_address;
+        }
+        if ($item_despatch_notes) {
+            $despatch_notes = $item_despatch_notes;
+        }
+        // Break after the first item with data to avoid duplicates
+        if ($shipping_address || $despatch_notes) {
             break;
         }
     }
+/*
+if ($shipping_address || $despatch_notes) {
+        echo '<div class="custom-order-details">';
+        echo '<h2 class="woocommerce-column__title">Order Details</h2>';
 
-    if ($shipping_address) {
-        echo '<div class="custom-shipping-address">';
-        echo '<h2 class="woocommerce-column__title">Shipping Details</h2>';
-        echo '<address>';
-        echo esc_html($shipping_address['street_address']) . '<br>';
-        if (!empty($shipping_address['address_line2'])) {
-            echo esc_html($shipping_address['address_line2']) . '<br>';
+        // Display Despatch Notes
+        if ($despatch_notes) {
+            echo '<p><strong>Despatch Notes:</strong> ' . esc_html($despatch_notes) . '</p>';
         }
-        //echo esc_html($shipping_address['city']) . ', ' . esc_html($shipping_address['county_state']) . ', ' . esc_html($shipping_address['zip_postal']) . '<br>';
 
-        echo esc_html($shipping_address['city']) . '<br>';
-        echo esc_html($shipping_address['county_state']) . '<br>';
-        echo esc_html($shipping_address['zip_postal']) . '<br>';
-        echo esc_html($shipping_address['country']) . '<br>';
-        echo '</address>';
+        // Display Shipping Address
+        if ($shipping_address) {
+            echo '<h3>Shipping Details</h3>';
+            echo '<address>';
+            echo esc_html($shipping_address['street_address']) . '<br>';
+            if (!empty($shipping_address['address_line2'])) {
+                echo esc_html($shipping_address['address_line2']) . '<br>';
+            }
+            echo esc_html($shipping_address['city']) . '<br>';
+            echo esc_html($shipping_address['county_state']) . '<br>';
+            echo esc_html($shipping_address['zip_postal']) . '<br>';
+            echo esc_html($shipping_address['country']) . '<br>';
+            echo '</address>';
+        }
+
         echo '</div>';
     }
+        */
 }
 // DISPLAY SHIPPING ADDRESS ON THANKYOU PAGE
 
@@ -835,6 +890,7 @@ function display_shipping_address_on_thankyou($order_id) {
 
 
 // SAVE SHIPPING ADDRESS TO ORDER META AND DISPLAY IN EMAILS
+/*
 add_action('woocommerce_checkout_create_order_line_item', 'save_shipping_address_to_order_item', 10, 4);
 function save_shipping_address_to_order_item($item, $cart_item_key, $values, $order) {
     if (isset($values['custom_inputs']['shipping_address'])) {
@@ -842,27 +898,35 @@ function save_shipping_address_to_order_item($item, $cart_item_key, $values, $or
         $item->add_meta_data('custom_shipping_address', $shipping_address, true);
     }
 }
+    */
 // SAVE SHIPPING ADDRESS TO ORDER META AND DISPLAY IN EMAILS
 
 
 
 
-// DISPLAY SHIPPING ADDRESS IN ORDER EMAILS
+// DISPLAY SHIPPING ADDRESS/NOTES IN ORDER EMAILS
 
 add_action('woocommerce_email_customer_details', 'add_custom_shipping_address_below_billing', 25, 4);
 function add_custom_shipping_address_below_billing($order, $sent_to_admin, $plain_text, $email) {
     // Loop through order items to find the first shipping address
     $shipping_address = null;
+    $despatch_notes = null;
 
     foreach ($order->get_items() as $item_id => $item) {
         $meta_address = $item->get_meta('custom_shipping_address');
+        $meta_despatch_notes = $item->get_meta('despatch_notes');
         if (!empty($meta_address['street_address'])) {
             $shipping_address = $meta_address;
-            break; // only show first one
+        }
+        if ($meta_despatch_notes) {
+            $despatch_notes = $meta_despatch_notes;
+        }
+        if ($shipping_address || $despatch_notes) {
+            break; // Only show first item with data
         }
     }
 
-    if (!$shipping_address) return;
+    if (!$shipping_address && !$despatch_notes) return;
 
     if ($plain_text) {
         echo "\nShipping Address:\n";
@@ -873,19 +937,27 @@ function add_custom_shipping_address_below_billing($order, $sent_to_admin, $plai
         echo $shipping_address['city'] . ', ' . $shipping_address['county_state'] . ', ' . $shipping_address['zip_postal'] . "\n";
         echo $shipping_address['country'] . "\n";
     } else {
-        echo '<div class="custom-shipping-address" style="margin-top:10px;">';
-        echo '<h3>Shipping Address</h3>';
-        echo esc_html($shipping_address['street_address']) . '<br>';
-        if (!empty($shipping_address['address_line2'])) {
-            echo esc_html($shipping_address['address_line2']) . '<br>';
+
+echo '<div class="custom-order-details" style="margin-top:10px;">';
+        if ($despatch_notes) {
+            echo '<h3>Despatch Notes</h3>';
+            echo '<p>' . esc_html($despatch_notes) . '</p>';
         }
-        echo esc_html($shipping_address['city']) . ', ' . esc_html($shipping_address['county_state']) . ', ' . esc_html($shipping_address['zip_postal']) . '<br>';
-        echo esc_html($shipping_address['country']) . '<br>';
+        if ($shipping_address) {
+            echo '<h3>Shipping Address</h3>';
+            echo esc_html($shipping_address['street_address']) . '<br>';
+            if (!empty($shipping_address['address_line2'])) {
+                echo esc_html($shipping_address['address_line2']) . '<br>';
+            }
+            echo esc_html($shipping_address['city']) . ', ' . esc_html($shipping_address['county_state']) . ', ' . esc_html($shipping_address['zip_postal']) . '<br>';
+            echo esc_html($shipping_address['country']) . '<br>';
+        }
         echo '</div>';
+
     }
 }
 
-// DISPLAY SHIPPING ADDRESS IN ORDER EMAILS
+// DISPLAY SHIPPING ADDRESS/NOTES IN ORDER EMAILS
 
 
 
@@ -1073,14 +1145,13 @@ function display_custom_inputs_on_product_page() {
         if (!is_numeric($product_weight) || $product_weight <= 0) {
             $total_del_weight = new WP_Error('invalid_weight', 'Invalid or missing product weight');
         } else {
-            //$total_del_weight = $sheets * floatval($product_weight); //old
 
             $totalSqMm = $part_length_mm * $part_width_mm;
             $totalSqCm = $totalSqMm / 100;
             $total_del_weight = $totalSqCm * floatval($product_weight) * $quantity * 1.03;
             $final_shipping = calculate_shipping_cost($total_del_weight, $country);
 
-            //$total_del_weight = round($total_del_weight, 4);
+
             error_log("product_weight?: $product_weight");
             error_log("sheets?: $sheets");
             error_log("total_del_weight??: $total_del_weight");

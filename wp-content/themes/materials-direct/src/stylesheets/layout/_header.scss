@@ -24,9 +24,11 @@
         margin: 0;
     }
     &__menu-right li {
-        color: variables.$secondary-color;
         display: inline;
         margin: 0 0 0 0.7rem;
+    }
+    &__menu-right li a {
+        color: variables.$secondary-color;
     }
     &__top {
         background: #ededed;
@@ -42,6 +44,11 @@
     }
     &__phone, &__mail {
         display: inline;
+    }
+    &__icon-link {
+        color: #bababa;
+    }
+    &__icon-phone, &__icon-email {
         color: #bababa;
     }
     &__left {
@@ -70,8 +77,10 @@
     }
     &__main-menu li {
         display: inline-block;
-        color: variables.$secondary-color;
         padding: 0 1.9vw 14px 0;
+    }
+    &__main-menu li a {
+        color: variables.$secondary-color;
     }
 }
 

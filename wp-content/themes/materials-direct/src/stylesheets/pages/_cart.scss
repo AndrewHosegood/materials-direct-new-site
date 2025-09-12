@@ -29,6 +29,14 @@
         display: inline;
         padding: 0;
     }
+    & .cart .product-name .variation .variation-DespatchNotes p {
+        display: inline;
+        padding: 0;
+    }
+    & .cart .product-name .variation .variation-CustomerShippingWeights p {
+        display: inline;
+        padding: 0;
+    }
     & .cart .product-name .variation dt {
         margin-right: 0.5rem;
         font-weight: bold;
@@ -45,7 +53,12 @@
 .woocommerce-cart th.product-price, .woocommerce-cart td.product-price, .woocommerce-cart th.product-quantity, .woocommerce-cart td.product-quantity {
   display: none;
 }
-
+.woocommerce-cart .cart-collaterals .cart_totals .woocommerce-shipping-destination {
+    display: none;
+}
+.woocommerce-cart .cart-collaterals .cart_totals .woocommerce-shipping-calculator {
+    display: none;
+}
 .woocommerce-cart-form .shop_table tbody tr:last-child {
   display: none;
 }

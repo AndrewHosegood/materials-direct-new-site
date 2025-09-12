@@ -5,6 +5,35 @@
     & .entry-header {
         display: none;
     }
+    & .product-name a {
+        color: variables.$primary-color;
+        font-weight: bold;
+    }
+    & .product-name .variation .variation-Width p {
+        display: inline;
+        padding: 0;
+    }
+    & .product-name .variation .variation-Length p {
+        display: inline;
+        padding: 0;
+    }
+    & .product-name .variation .variation-Totalnumberofparts p {
+        display: inline;
+        padding: 0;
+    }
+    & .product-name .variation .variation-DeliveryTime p {
+        display: inline;
+        padding: 0;
+    }
+    & .product-name .variation .variation-SheetsRequired p {
+        display: inline;
+        padding: 0;
+    }
+    & .product-name .variation dt {
+        margin-right: 0.5rem;
+        font-weight: bold;
+        line-height: 2rem;
+    }
     & #payment {
         background: none;
         border-radius: 5px;

@@ -1,0 +1,75 @@
+@use "../abstracts/breakpoints";
+@use "../abstracts/variables";
+.related {
+    &__grey-panel {
+        text-align: center;
+        background: #efefef;
+        padding: 0.8rem;
+        min-height: 145px;
+    }
+    &__grey-panel h2 {
+        color: variables.$secondary-color;
+        font-weight: 500;
+    }
+    &__product-excerpt {
+        background: white;
+        min-height: 195px;
+    }
+    &__product-excerpt ul li {
+        border-bottom: 1px solid gainsboro;
+        padding: 0.5rem;
+        text-align:center;
+        line-height: 1.3rem;
+        opacity: 0.9;
+    }
+    &__product-excerpt ul li:last-child {
+        border-bottom: 0px solid gainsboro;
+    }
+    &__button {
+        width: 100%;
+        display: block;
+        background: variables.$primary-color;
+        padding: 0.5rem;
+        color: white;
+        border-radius: 0.3rem;
+        text-align: center;
+        height: 50px;
+    }
+    &__button:hover {
+        background: variables.$secondary-color;
+    }
+    &__product-sku {
+        font-size: 13px; 
+        color: #555;
+        margin-top: 0px;
+        font-weight: 400;
+    }
+    & .products {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    & .products li {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    & .products li a {
+        width: 100%;
+    }
+    & img {
+         border: 1px solid #f2f2f2;
+    }
+}
+.woocommerce ul.products li.product a img {
+    margin: 0;
+}
+.woocommerce ul.products.columns-3 li.product, .woocommerce-page ul.products.columns-3 li.product {
+    width: 31.333%;
+}
+.woocommerce ul.products li.product, .woocommerce-page ul.products li.product {
+    margin: 0 2% 0 0;
+}
+.woocommerce ul.products li.product .woocommerce-loop-product__title {
+    font-size: 1.1rem;
+    line-height: 1.6rem;
+}

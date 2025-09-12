@@ -74,8 +74,10 @@
     }
     &__menu li {
         display: inline-block;
-        color: white;
         width: 100%;
+    }
+    &__menu li a {
+        color: white;
     }
     &__subheading {
         color: variables.$primary-color;
