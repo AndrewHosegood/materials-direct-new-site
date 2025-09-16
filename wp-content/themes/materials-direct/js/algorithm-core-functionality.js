@@ -110,7 +110,7 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'calculate_secure_price',
                 product_id: ajax_params.product_id,
-                nonce: ajax_params.nonce
+                nonce: ajax_params.nonce,
             },
             success: function(response) {
                 if (response.success) {

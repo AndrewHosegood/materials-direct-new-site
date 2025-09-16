@@ -114,6 +114,20 @@
         border: 1px solid #ddd;
         border-width: 0 1px 1px 0;
     }
+    &__backorder-message {
+        background-color: #f8d7da; 
+        color: #721c24; 
+        padding: 10px; 
+        margin: 1rem 0 0 0; 
+        border: 1px solid #f5c6cb; 
+        border-radius: 4px;
+    }
+    &__backorder-message-text {
+        padding: 0;
+    }
+}
+.single-product div.product .stock.out-of-stock {
+    margin-bottom: 1.5rem;
 }
 
 .woocommerce div.product form.cart .button {
@@ -129,35 +143,21 @@
 .woocommerce-page div.product div.images {
   width: 40%;
 }
-.single-product div.product .stock {
-  color: #fff !important;
-  background: variables.$primary-color;
-  display: table-cell;
-  padding: 5px 20px;
-  border-radius: 20px;
-  margin-top: 1rem;
-  display: inline-block;
-}
 .custom-price-calc {
 	margin-bottom: 2rem;
 }
-// .custom-price-calc__label {
-// 	width: 50%; display:block;
-// }
 .custom-price-calc__input {
 	padding: 0.5rem;
 }
-// .single #generate_price {
-//     background: black;
-//     color: white;
-//     border: 0;
-//     padding: 1.1rem 1.9rem;
-//     font-size: 1.1rem;
-// 	margin-bottom: 1rem;
-// }
 .single .wp-block-woocommerce-product-price {
 	display: none;
 }
 .woocommerce div.product form.cart div.quantity {
 	display: none;
 }
+.woocommerce-product-gallery__wrapper {
+    border: 1px solid #efefef;
+}
+// div.product p.price {
+//         display: none;
+// }

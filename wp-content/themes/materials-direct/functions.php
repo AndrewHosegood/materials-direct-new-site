@@ -241,9 +241,43 @@ require_once('includes/related-products-styling.php');
 require_once('includes/custom-product-tabs.php');
 // Custom product page tabs
 
+// Display stock availability on product page based on stock status
+require_once('includes/display-stock-availability.php');
+// Display stock availability on product page based on stock status
+
+// Display backorder message on product page
+require_once('includes/display-backorder-message.php');
+// Display backorder message on product page
+
+// conditionally show/hide product price based on single product
+require_once('includes/conditionally-hide-price.php');
+// conditionally show/hide product price based on single product
+
 /* END CUSTOM FUNCTIONS */
+
+
+
+
+
+
 
 // Temporary - display acf is_single_product on product page
 //require_once('includes/display-is-single-product-on-product-page.php');
 // Temporary - display acf is_single_product on product page
+
+
+
+
+
+// Force WooCommerce to always use the Standard tax class for shipping
+/*
+add_filter('woocommerce_shipping_tax_class', function($tax_class, $package, $shipping_method) {
+    error_log('DEBUG: WooCommerce shipping tax class before override = ' . (empty($tax_class) ? 'Standard' : $tax_class));
+    return '';
+}, 10, 3);
+*/
+
+
+
+
 

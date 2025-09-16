@@ -49,6 +49,14 @@ function calculate_product_price($product_id, $width, $length, $qty, $discount_r
     // End Codys algorith
 
     $finalPppOnAva = $ppp + $costFactorResult;
+
+    // Check stock quantity and apply 5% discount if on backorder
+    $product = wc_get_product($product_id);
+    $stock_quantity = $product->get_stock_quantity();
+    if ($stock_quantity <= 0) {
+        $discount_rate = max($discount_rate, 0.05); // Ensure at least 5% discount for backorder
+    }
+
     $discountAmount = $finalPppOnAva * $discount_rate;
     $finalPppOnAva = $finalPppOnAva - $discountAmount;
 
@@ -84,6 +92,26 @@ function custom_price_input_fields_prefill() {
 
     // If is_product_single is true, skip the custom form and rely on default WooCommerce behavior
     if ($is_product_single) {
+        
+        // add the form in for now - but need to get the form to work!!
+        echo '<div id="shipping-address-form">
+            <h3 class="product-page__subheading">Item(s) shipping address<span class="gfield_required gfield_required_asterisk">*</span></h3>
+            <label class="custom-price-calc__label"><input class="product-page__calc-input" type="text" id="input_street_address" name="custom_street_address" placeholder="Street Address" value="' . $street_address . '" required></label>
+            <label class="custom-price-calc__label"><input class="product-page__calc-input" type="text" id="input_address_line2" name="custom_address_line2" placeholder="Address Line 2" value="' . $address_line2 . '"></label>
+            <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_city" name="custom_city" placeholder="City" value="' . $city . '" required></label>
+            <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_county_state" name="custom_county_state" placeholder="County/State" value="' . $county_state . '" required></label>
+            <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_zip_postal" name="custom_zip_postal" placeholder="ZIP/ POstal Code" value="' . $zip_postal . '" required></label>
+            <label class="custom-price-calc__label">
+                <select id="input_country" class="product-page__calc-input product-page__calc-input-small" name="custom_country" required>
+                    <option value="United Kingdom"' . selected($country, 'United Kingdom', false) . '>United Kingdom</option>
+                    <option value="France"' . selected($country, 'France', false) . '>France</option>
+                    <option value="Germany"' . selected($country, 'Germany', false) . '>Germany</option>
+                    <option value="Monaco"' . selected($country, 'Monaco', false) . '>Monaco</option>
+                </select>
+            </label>
+        </div>';
+        // add the form in for now - but need to get the form to work!!
+
         return; // Exit early to display default WooCommerce form
     }
 
@@ -98,13 +126,15 @@ function custom_price_input_fields_prefill() {
     $country = !empty($shipping_address['country']) ? esc_attr($shipping_address['country']) : 'United Kingdom';
 
     echo '<div id="custom-price-calc" class="custom-price-calc">
+    
         <!-- Price Inputs -->
         <div class="product-page__grey-panel">
         <label class="product-page__input-wrap">Width (MM): <input class="product-page__input" type="number" id="input_width" name="custom_width" min="0.01" step="0.01" required></label>
         <label class="product-page__input-wrap">Length (MM): <input class="product-page__input" type="number" id="input_length" name="custom_length" min="0.01" step="0.01" required></label>
         <label class="product-page__input-wrap">Quantity: <input class="product-page__input" type="number" id="input_qty" name="custom_qty" value="1" min="1" step="1" required></label>
         </div>
-        <label class="custom-price-calc__label product-page__label">Despatched Within <span class="product-page__label-small-text">Only applies to available stock</span> 
+
+        <label id="despatched_within" class="custom-price-calc__label product-page__label">Despatched Within <span class="product-page__label-small-text">Only applies to available stock</span> 
             <select class="custom-price-calc__input product-page__calc-input" id="input_discount_rate" name="custom_discount_rate">
                 <option value="0" selected="selected">24Hrs (working day)</option>
                 <option value="0.015">48Hrs (working days) (1.5% Discount)</option>
@@ -539,7 +569,8 @@ function init_custom_shipping_method() {
                         'id' => $this->id . ':' . $this->instance_id,
                         'label' => $this->title,
                         'cost' => $total_shipping,
-                        'taxes' => [], // Taxes can be calculated if needed
+                        'taxes'     => '',
+                        'calc_tax' => 'per_order',
                         'package' => $package,
                     ]);
                 }
@@ -642,7 +673,7 @@ function add_custom_shipping_to_order($order, $data) {
     foreach ($shipping_by_date as $date => $data) {
         $total_shipping += floatval($data['final_shipping']);
     }
-
+    /*
     if ($total_shipping > 0) {
         $shipping_rate = new WC_Shipping_Rate(
             'custom_shipping_rate',
@@ -654,8 +685,19 @@ function add_custom_shipping_to_order($order, $data) {
         );
         $order->add_shipping($shipping_rate);
     }
+    */
+    if ($total_shipping > 0) {
+        // Create a new shipping item
+        $shipping_item = new WC_Order_Item_Shipping();
+        $shipping_item->set_method_id('custom_shipping_method');
+        $shipping_item->set_method_title('Shipping Total');
+        $shipping_item->set_total($total_shipping);
 
+        // Add the shipping item to the order
+        $order->add_item($shipping_item);
+    }
     // Update shipping address from session
+    /*
     $shipping_address = WC()->session->get('custom_shipping_address');
     if ($shipping_address && is_array($shipping_address)) {
         $order->set_shipping_first_name(isset($data['billing_first_name']) ? $data['billing_first_name'] : '');
@@ -667,6 +709,38 @@ function add_custom_shipping_to_order($order, $data) {
         $order->set_shipping_state($shipping_address['county_state']);
         $order->set_shipping_postcode($shipping_address['zip_postal']);
         $order->set_shipping_country($shipping_address['country']);
+    }
+    */
+    $shipping_address = WC()->session->get('custom_shipping_address');
+    if ($shipping_address && is_array($shipping_address)) {
+        $order->set_shipping_first_name(isset($data['billing_first_name']) ? $data['billing_first_name'] : '');
+        $order->set_shipping_last_name(isset($data['billing_last_name']) ? $data['billing_last_name'] : '');
+        $order->set_shipping_company(isset($data['billing_company']) ? $data['billing_company'] : '');
+        $order->set_shipping_address_1($shipping_address['street_address']);
+        $order->set_shipping_address_2(!empty($shipping_address['address_line2']) ? $shipping_address['address_line2'] : '');
+        $order->set_shipping_city($shipping_address['city']);
+        $order->set_shipping_state($shipping_address['county_state']);
+        $order->set_shipping_postcode($shipping_address['zip_postal']);
+        
+        // Map full country names to ISO country codes for WooCommerce
+        $country_codes = [
+            'United Kingdom' => 'GB',
+            'France' => 'FR',
+            'Germany' => 'DE',
+            'Monaco' => 'MC',
+        ];
+        $country_code = isset($country_codes[$shipping_address['country']]) ? $country_codes[$shipping_address['country']] : '';
+        if ($country_code) {
+            $order->set_shipping_country($country_code);
+        }
+    }
+
+    // Debugging log to confirm shipping item addition
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log("add_custom_shipping_to_order: Added shipping item with total {$total_shipping} for order ID {$order->get_id()}");
+        if ($shipping_address && is_array($shipping_address)) {
+            error_log("add_custom_shipping_to_order: Shipping address set to " . print_r($shipping_address, true));
+        }
     }
 }
 
@@ -1091,7 +1165,9 @@ function display_custom_inputs_on_product_page() {
     $part_length_mm = isset($_POST['custom_length']) ? floatval($_POST['custom_length']) : 0;
     $part_width_mm = isset($_POST['custom_width']) ? floatval($_POST['custom_width']) : 0;
     $quantity = isset($_POST['custom_qty']) ? intval($_POST['custom_qty']) : 0;
+    $stock_quantity = $product->get_stock_quantity();
     $discount_rate = isset($_POST['custom_discount_rate']) ? floatval($_POST['custom_discount_rate']) : 0;
+
     $country = isset($_POST['custom_country']) ? sanitize_text_field($_POST['custom_country']) : 'United Kingdom';
 
     $discount_labels = [
@@ -1192,6 +1268,8 @@ function display_custom_inputs_on_product_page() {
         echo '<p><strong>Max Columns:</strong> ' . esc_html($result['max_columns']) . '</p>';
         echo '<p><strong>Max Rows:</strong> ' . esc_html($result['max_rows']) . '</p>';
         echo '<p><strong>Total Delivery Weight:</strong> ' . esc_html($total_del_weight) . ' ' . esc_html($weight_unit) . '</p>';
+        echo '<p><strong>Discount Rate:</strong> ' . esc_html($discount_rate) . '</p>';
+        echo '<p><strong>Stock Quantity:</strong> ' . esc_html($stock_quantity) . '</p>';
         echo '</div>';
     }
 }
@@ -1207,3 +1285,35 @@ function add_is_product_single_hidden_field() {
     echo '<input type="hidden" name="is_product_single" value="' . ($is_product_single ? '1' : '0') . '">';
 }
 // ADD HIDDEN FIELD FOR IS_PRODUCT_SINGLE
+
+
+
+// DYNAMICALLY SET THE CUSTOMERS PRODUCT PAGE SHIPPING ADDRESS FOR TAX CALCULATIONS BASED ON SESSON
+
+// Dynamically set customer's shipping country for tax calculation based on session
+add_action('template_redirect', 'set_custom_shipping_country_for_tax_calculation');
+function set_custom_shipping_country_for_tax_calculation() {
+    if (is_cart() || is_checkout()) {
+        $shipping_address = WC()->session->get('custom_shipping_address');
+        if ($shipping_address && isset($shipping_address['country'])) {
+            $custom_country = $shipping_address['country'];
+            // Map full country names to ISO country codes for WooCommerce
+            $country_codes = [
+                'United Kingdom' => 'GB',
+                'France' => 'FR',
+                'Germany' => 'DE',
+                'Monaco' => 'MC',
+            ];
+            $country_code = isset($country_codes[$custom_country]) ? $country_codes[$custom_country] : '';
+            if ($country_code) {
+                WC()->customer->set_shipping_country($country_code);
+                // Optionally set other address fields for more precise tax rules if needed
+                WC()->customer->set_shipping_address($shipping_address['street_address']);
+                WC()->customer->set_shipping_address_2($shipping_address['address_line2']);
+                WC()->customer->set_shipping_city($shipping_address['city']);
+                WC()->customer->set_shipping_state($shipping_address['county_state']);
+                WC()->customer->set_shipping_postcode($shipping_address['zip_postal']);
+            }
+        }
+    }
+}

@@ -1,3 +1,5 @@
+@use "../abstracts/breakpoints";
+@use "../abstracts/variables";
 .woocommerce-tabs {
     position: relative;
     padding: 0 0 2.5rem 0;
@@ -34,3 +36,51 @@
     margin: 0 -5px;
     padding: 0 1em;
 }
+
+.woocommerce div.product .woocommerce-tabs ul.tabs li {
+    &::before {
+        box-shadow: none;
+        border-width: 0;
+    }
+    &::after {
+        box-shadow: none;
+        border-width: 0;
+    }
+    &.active::before {
+        box-shadow: none;
+    }
+    &.active::after {
+        box-shadow: none;
+    }
+}
+
+.woocommerce div.product .woocommerce-tabs ul.tabs li.active {
+    background: #fff;
+    color: #515151;
+    z-index: 2;
+    border-bottom-color: variables.$secondary-color;
+    border-bottom-width: 3px;
+}
+
+/*
+.woocommerce div.product .woocommerce-tabs ul.tabs::before {
+    border: 0;
+}
+.woocommerce div.product .woocommerce-tabs ul.tabs::after {
+    border: 0;
+}
+.woocommerce div.product .woocommerce-tabs ul.tabs li::before {
+    box-shadow: none;
+}
+.woocommerce div.product .woocommerce-tabs ul.tabs li::after {
+    box-shadow: none;
+}
+
+.woocommerce div.product .woocommerce-tabs ul.tabs li.active::before {
+    box-shadow: none;
+}
+
+.woocommerce div.product .woocommerce-tabs ul.tabs li.active::after {
+    box-shadow: none;
+}
+    */
