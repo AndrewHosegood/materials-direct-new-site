@@ -5,7 +5,7 @@ function exponentialDecay($A, $k, $t) {
 }
 // End Codys Exponential Decay Function 
 
-// PRICE CALCULATION FUNCTION
+// 1. PRICE CALCULATION FUNCTION
 function calculate_product_price($product_id, $width, $length, $qty, $discount_rate = 0) {
 
     if (!is_numeric($product_id) || !is_numeric($width) || !is_numeric($length) || !is_numeric($qty) || !is_numeric($discount_rate)) {
@@ -79,28 +79,37 @@ function calculate_product_price($product_id, $width, $length, $qty, $discount_r
 
     return round($total_price, 2);
 }
-// END PRICE CALCULATION FUNCTION
+// 1. END PRICE CALCULATION FUNCTION
 
 
-// HTML FORM WITH SPINNER
+// 2. HTML FORM WITH SPINNER
 add_action('woocommerce_before_add_to_cart_button', 'custom_price_input_fields_prefill');
 function custom_price_input_fields_prefill() {
     global $product;
 
     // Get the ACF field value
     $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product->get_id()) : false;
+    $product_id = $product->get_id();
+    $shipping_address = WC()->session->get('custom_shipping_address', []);
+
+    // Prefill shipping address fields from session
+    $street_address = !empty($shipping_address['street_address']) ? esc_attr($shipping_address['street_address']) : '';
+    $address_line2 = !empty($shipping_address['address_line2']) ? esc_attr($shipping_address['address_line2']) : '';
+    $city = !empty($shipping_address['city']) ? esc_attr($shipping_address['city']) : '';
+    $county_state = !empty($shipping_address['county_state']) ? esc_attr($shipping_address['county_state']) : '';
+    $zip_postal = !empty($shipping_address['zip_postal']) ? esc_attr($shipping_address['zip_postal']) : '';
+    $country = !empty($shipping_address['country']) ? esc_attr($shipping_address['country']) : 'United Kingdom';
 
     // If is_product_single is true, skip the custom form and rely on default WooCommerce behavior
-    if ($is_product_single) {
-        
-        // add the form in for now - but need to get the form to work!!
+if ($is_product_single) {
+        // Output shipping address form for single products
         echo '<div id="shipping-address-form">
             <h3 class="product-page__subheading">Item(s) shipping address<span class="gfield_required gfield_required_asterisk">*</span></h3>
             <label class="custom-price-calc__label"><input class="product-page__calc-input" type="text" id="input_street_address" name="custom_street_address" placeholder="Street Address" value="' . $street_address . '" required></label>
             <label class="custom-price-calc__label"><input class="product-page__calc-input" type="text" id="input_address_line2" name="custom_address_line2" placeholder="Address Line 2" value="' . $address_line2 . '"></label>
             <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_city" name="custom_city" placeholder="City" value="' . $city . '" required></label>
             <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_county_state" name="custom_county_state" placeholder="County/State" value="' . $county_state . '" required></label>
-            <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_zip_postal" name="custom_zip_postal" placeholder="ZIP/ POstal Code" value="' . $zip_postal . '" required></label>
+            <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_zip_postal" name="custom_zip_postal" placeholder="ZIP/Postal Code" value="' . $zip_postal . '" required></label>
             <label class="custom-price-calc__label">
                 <select id="input_country" class="product-page__calc-input product-page__calc-input-small" name="custom_country" required>
                     <option value="United Kingdom"' . selected($country, 'United Kingdom', false) . '>United Kingdom</option>
@@ -110,21 +119,13 @@ function custom_price_input_fields_prefill() {
                 </select>
             </label>
         </div>';
-        // add the form in for now - but need to get the form to work!!
-
-        return; // Exit early to display default WooCommerce form
+        echo '<input type="hidden" id="custom_price" name="custom_price" value="">';
+        echo '<div id="custom_price_display"></div>';
+        return;
     }
 
-    $product_id = $product->get_id();
-    $shipping_address = WC()->session->get('custom_shipping_address', []);
 
-    $street_address = !empty($shipping_address['street_address']) ? esc_attr($shipping_address['street_address']) : '';
-    $address_line2 = !empty($shipping_address['address_line2']) ? esc_attr($shipping_address['address_line2']) : '';
-    $city = !empty($shipping_address['city']) ? esc_attr($shipping_address['city']) : '';
-    $county_state = !empty($shipping_address['county_state']) ? esc_attr($shipping_address['county_state']) : '';
-    $zip_postal = !empty($shipping_address['zip_postal']) ? esc_attr($shipping_address['zip_postal']) : '';
-    $country = !empty($shipping_address['country']) ? esc_attr($shipping_address['country']) : 'United Kingdom';
-
+    // Existing form for non-single products
     echo '<div id="custom-price-calc" class="custom-price-calc">
     
         <!-- Price Inputs -->
@@ -175,11 +176,11 @@ function custom_price_input_fields_prefill() {
         </div>
     </div>';
 }
-// HTML FORM WITH SPINNER
+// 2. HTML FORM WITH SPINNER
 
 
 
-// SECURE PRICE CALCULATION IN PHP
+// 3. SECURE PRICE CALCULATION IN PHP
 add_action('wp_ajax_calculate_secure_price', 'calculate_secure_price');
 add_action('wp_ajax_nopriv_calculate_secure_price', 'calculate_secure_price');
 
@@ -272,11 +273,45 @@ function calculate_secure_price() {
         'sheets_required' => $sheets_required 
     ]);
 }
-// SECURE PRICE CALCULATION IN PHP
+// 3. SECURE PRICE CALCULATION IN PHP
 
 
+// 3b NEW AJAX HANDLER FOR SAVING SHIPPING ADDRESS FOR SINGLE PRODUCTS
+add_action('wp_ajax_save_single_product_shipping', 'save_single_product_shipping');
+add_action('wp_ajax_nopriv_save_single_product_shipping', 'save_single_product_shipping');
 
-// ENQUEUE JS WITH NONCE
+function save_single_product_shipping() {
+    // Verify nonce for security
+    check_ajax_referer('custom_price_nonce', 'nonce');
+
+    $product_id = intval($_POST['product_id']);
+    $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
+
+    if (!$is_product_single) {
+        wp_send_json_error(['message' => 'This action is only for single products.']);
+        return;
+    }
+
+    // Validate and save shipping address to session
+    if (!empty($_POST['street_address']) && !empty($_POST['city']) && !empty($_POST['county_state']) && !empty($_POST['zip_postal']) && !empty($_POST['country'])) {
+        $shipping_address = [
+            'street_address' => sanitize_text_field($_POST['street_address']),
+            'address_line2' => sanitize_text_field($_POST['address_line2']),
+            'city'          => sanitize_text_field($_POST['city']),
+            'county_state'  => sanitize_text_field($_POST['county_state']),
+            'zip_postal'    => sanitize_text_field($_POST['zip_postal']),
+            'country'       => sanitize_text_field($_POST['country']),
+        ];
+        WC()->session->set('custom_shipping_address', $shipping_address);
+        wp_send_json_success(['message' => 'Shipping address saved successfully.']);
+    } else {
+        wp_send_json_error(['message' => 'Please fill in all required shipping address fields.']);
+    }
+}
+// 3b NEW AJAX HANDLER FOR SAVING SHIPPING ADDRESS FOR SINGLE PRODUCTS
+
+
+// 4. ENQUEUE JS WITH NONCE
 add_action('wp_enqueue_scripts', function() {
     if (is_product()) {
         wp_enqueue_script('custom-price-calc', get_stylesheet_directory_uri() . '/js/algorithm-core-functionality.js', ['jquery'], null, true);
@@ -287,7 +322,7 @@ add_action('wp_enqueue_scripts', function() {
         ]);
     }
 });
-// ENQUEUE JS WITH NONCE
+// 4. ENQUEUE JS WITH NONCE
 
 
 
@@ -322,10 +357,6 @@ function group_shipping_by_date($cart) {
         }
     }
 
-    // echo "<pre>";
-    // print_r($shipping_by_date);
-    // echo "</pre>";
-
     return $shipping_by_date;
 }
 // HELPER FUNCTION TO GROUP SHIPPING DATA BY DISPATCH DATE
@@ -335,7 +366,6 @@ function group_shipping_by_date($cart) {
 
 
 // HELPER FUNCTION TO CALCULATE SHIPPING COST BASED ON TOTAL DELIVERY WEIGHT
-
 function calculate_shipping_cost($total_del_weight, $country) {
     // Define cost tiers for each country or group of countries
     $cost_tiers = [
@@ -394,7 +424,6 @@ function calculate_shipping_cost($total_del_weight, $country) {
 
     return 0;
 }
-
 // HELPER FUNCTION TO CALCULATE SHIPPING COST BASED ON TOTAL DELIVERY WEIGHT
 
 
@@ -404,9 +433,40 @@ add_filter('woocommerce_add_cart_item_data', 'add_custom_price_cart_item_data_se
 function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
     $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
 
-    // If is_product_single is true, skip custom inputs
+    // Initialize custom_inputs
+    $cart_item_data['custom_inputs'] = [];
+
+    // Handle shipping address for both single and non-single products
+    if (
+        isset($_POST['custom_street_address']) &&
+        isset($_POST['custom_city']) &&
+        isset($_POST['custom_county_state']) &&
+        isset($_POST['custom_zip_postal']) &&
+        isset($_POST['custom_country'])
+    ) {
+        $cart_item_data['custom_inputs']['shipping_address'] = [
+            'street_address' => sanitize_text_field($_POST['custom_street_address']),
+            'address_line2' => sanitize_text_field($_POST['custom_address_line2']),
+            'city' => sanitize_text_field($_POST['custom_city']),
+            'county_state' => sanitize_text_field($_POST['custom_county_state']),
+            'zip_postal' => sanitize_text_field($_POST['custom_zip_postal']),
+            'country' => sanitize_text_field($_POST['custom_country']),
+        ];
+        // Store shipping address in session
+        WC()->session->set('custom_shipping_address', $cart_item_data['custom_inputs']['shipping_address']);
+    }
+
     if ($is_product_single) {
-        return $cart_item_data; // Use default WooCommerce behavior
+        // For single products, only include shipping address and default price
+        $product = wc_get_product($product_id);
+        if ($product) {
+            $cart_item_data['custom_inputs']['price'] = floatval($product->get_price());
+            $cart_item_data['custom_inputs']['qty'] = 1;
+            $cart_item_data['custom_inputs']['sheets_required'] = 1;
+            // Optionally add despatch notes for single products
+            $cart_item_data['custom_inputs']['despatch_notes'] = 'Single product to be despatched in 24Hrs (working day)';
+        }
+        return $cart_item_data;
     }
 
     // Check if all required POST fields are set
@@ -415,12 +475,8 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
         !isset($_POST['custom_length']) ||
         !isset($_POST['custom_qty']) ||
         !isset($_POST['custom_price']) ||
-        !isset($_POST['custom_discount_rate']) ||
-        !isset($_POST['custom_street_address']) ||
-        !isset($_POST['custom_city']) ||
-        !isset($_POST['custom_county_state']) ||
-        !isset($_POST['custom_zip_postal']) ||
-        !isset($_POST['custom_country'])
+        !isset($_POST['custom_discount_rate'])
+
     ) {
         // Log missing POST data for debugging
         if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -505,7 +561,7 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
     $final_shipping = calculate_shipping_cost($total_del_weight, $country);
 
     // Store data in cart item
-    $cart_item_data['custom_inputs'] = [
+    $cart_item_data['custom_inputs'] = array_merge($cart_item_data['custom_inputs'], [
         'width' => floatval($_POST['custom_width']),
         'length' => floatval($_POST['custom_length']),
         'qty' => intval($_POST['custom_qty']),
@@ -515,19 +571,8 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
         'final_shipping' => $final_shipping,
         'shipments' => $shipments,
         'total_del_weight' => $total_del_weight,
-        'despatch_notes' => $despatch_notes, // Add despatch notes
-        'shipping_address' => [
-            'street_address' => sanitize_text_field($_POST['custom_street_address']),
-            'address_line2' => sanitize_text_field($_POST['custom_address_line2']),
-            'city' => sanitize_text_field($_POST['custom_city']),
-            'county_state' => sanitize_text_field($_POST['custom_county_state']),
-            'zip_postal' => sanitize_text_field($_POST['custom_zip_postal']),
-            'country' => sanitize_text_field($_POST['custom_country']),
-        ],
-    ];
-
-    // Store shipping address in WooCommerce session
-    WC()->session->set('custom_shipping_address', $cart_item_data['custom_inputs']['shipping_address']);
+        'despatch_notes' => $despatch_notes,
+    ]);
 
     return $cart_item_data;
 }
@@ -1151,11 +1196,17 @@ function display_custom_inputs_on_product_page() {
     $product_id = $product->get_id();
     $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
 
+    // Get product weight (in kg)
+    $product_weight = $product->get_weight();
+    $weight_unit = get_option('woocommerce_weight_unit');
+
     if ($is_product_single) {
         // Display minimal info for single products
+        $total_del_weight = $product_weight;
         echo '<div class="custom-product-info" style="margin-bottom: 20px;">';
         echo '<h3>Product Details</h3>';
         echo '<p><strong>Price:</strong> ' . wc_price($product->get_price()) . '</p>';
+        echo '<p><strong>Total Delivery Weight:</strong> ' . esc_html($total_del_weight) . ' ' . esc_html($weight_unit) . '</p>'; // new value to sort
         echo '</div>';
         return;
     }
@@ -1201,9 +1252,6 @@ function display_custom_inputs_on_product_page() {
         $shipments = date('d/m/Y', strtotime(' + 35 days'));
     }
 
-    // Get product weight (in kg)
-    $product_weight = $product->get_weight();
-    $weight_unit = get_option('woocommerce_weight_unit');
 
     // Only calculate and display if valid inputs are provided
     if ($part_width_mm > 0 && $part_length_mm > 0 && $quantity > 0) {

@@ -1,29 +1,44 @@
 jQuery(document).ready(function($) {
     // Check if the product is single (via data attribute or AJAX)
-    const isProductSingle = $('input[name="is_product_single"]').val() === '1'; // Add hidden field in PHP (see below)
+    const isProductSingle = $('input[name="is_product_single"]').val() === '1';
+
+    // Common function to validate shipping address
+    function validateShippingAddress() {
+        const street_address = $('#input_street_address').val().trim();
+        const city = $('#input_city').val().trim();
+        const county_state = $('#input_county_state').val().trim();
+        const zip_postal = $('#input_zip_postal').val().trim();
+        const country = $('#input_country').val();
+        
+        if (!street_address || !city || !county_state || !zip_postal || !country) {
+            $('#custom_price_display').html('Please fill in all required shipping address fields.');
+            return false;
+        }
+        return {
+            street_address,
+            address_line2: $('#input_address_line2').val().trim(),
+            city,
+            county_state,
+            zip_postal,
+            country
+        };
+    }
     
     // Generate Price Button (only for non-single products)
     if (!isProductSingle) {
+
         $('#generate_price').on('click', function() {
             const width = parseFloat($('#input_width').val());
             const length = parseFloat($('#input_length').val());
             const qty = parseInt($('#input_qty').val());
             const discount_rate = parseFloat($('#input_discount_rate').val());
-            const street_address = $('#input_street_address').val().trim();
-            const address_line2 = $('#input_address_line2').val().trim();
-            const city = $('#input_city').val().trim();
-            const county_state = $('#input_county_state').val().trim();
-            const zip_postal = $('#input_zip_postal').val().trim();
-            const country = $('#input_country').val();
+            const shipping_address = validateShippingAddress();
+
+            if (!shipping_address) return;
 
             // Client-side validation for price calculation
             if (isNaN(width) || isNaN(length) || isNaN(qty) || width <= 0 || length <= 0 || qty < 1) {
                 $('#custom_price_display').html('Please enter valid positive Width, Length, and Quantity.');
-                return;
-            }
-
-            if (!street_address || !city || !county_state || !zip_postal || !country) {
-                $('#custom_price_display').html('Please fill in all required shipping address fields.');
                 return;
             }
 
@@ -47,12 +62,7 @@ jQuery(document).ready(function($) {
                     qty: qty,
                     discount_rate: discount_rate,
                     nonce: ajax_params.nonce,
-                    street_address: street_address,
-                    address_line2: address_line2,
-                    city: city,
-                    county_state: county_state,
-                    zip_postal: zip_postal,
-                    country: country
+                    ...shipping_address
                 },
                 success: function(response) {
                     $('#price-spinner-overlay').fadeOut(200);
@@ -83,24 +93,19 @@ jQuery(document).ready(function($) {
 
         // Validate shipping address on Add to Cart form submission
         $('.woocommerce-cart-form, form.cart').on('submit', function(e) {
-            const street_address = $('#input_street_address').val().trim();
-            const city = $('#input_city').val().trim();
-            const county_state = $('#input_county_state').val().trim();
-            const zip_postal = $('#input_zip_postal').val().trim();
-            const country = $('#input_country').val();
             const price = $('#custom_price').val(); 
-
             if (!price) {
                 e.preventDefault();
                 $('#custom_price_display').html('Please generate a price before adding to cart.');
                 return false;
             }
 
-            if (!street_address || !city || !county_state || !zip_postal || !country) {
+            const shipping_address = validateShippingAddress();
+            if (!shipping_address) {
                 e.preventDefault();
-                $('#custom_price_display').html('Please fill in all required shipping address fields.');
                 return false;
             }
+
         });
     } else {
         // For single products, display the default price immediately
@@ -110,7 +115,7 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'calculate_secure_price',
                 product_id: ajax_params.product_id,
-                nonce: ajax_params.nonce,
+                nonce: ajax_params.nonce
             },
             success: function(response) {
                 if (response.success) {
@@ -126,5 +131,45 @@ jQuery(document).ready(function($) {
                 $('#custom_price_display').html('Error: Server error.');
             }
         });
+
+        // Validate and save shipping address on Add to Cart for single products
+        $('.woocommerce-cart-form, form.cart').on('submit', function(e) {
+            const price = $('#custom_price').val();
+            if (!price) {
+                e.preventDefault();
+                $('#custom_price_display').html('Please generate a price before adding to cart.');
+                return false;
+            }
+
+            const shipping_address = validateShippingAddress();
+            if (!shipping_address) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Send shipping address to server via AJAX before adding to cart
+            $.ajax({
+                url: ajax_params.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'save_single_product_shipping',
+                    product_id: ajax_params.product_id,
+                    nonce: ajax_params.nonce,
+                    ...shipping_address
+                },
+                success: function(response) {
+                    if (!response.success) {
+                        e.preventDefault();
+                        $('#custom_price_display').html('Error: ' + (response.data.message || 'Unable to save shipping address.'));
+                    }
+                    // Form submission will proceed if AJAX is successful
+                },
+                error: function() {
+                    e.preventDefault();
+                    $('#custom_price_display').html('Error: Server error while saving shipping address.');
+                }
+            });
+        });
+
     }
 });

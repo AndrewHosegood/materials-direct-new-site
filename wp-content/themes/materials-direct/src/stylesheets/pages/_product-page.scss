@@ -158,6 +158,8 @@
 .woocommerce-product-gallery__wrapper {
     border: 1px solid #efefef;
 }
-// div.product p.price {
-//         display: none;
-// }
+.woocommerce div.product p.price {
+    color: variables.$primary-color;
+    font-weight: 700;
+    padding: 0.2rem 0;
+}
