@@ -29,6 +29,14 @@
         display: inline;
         padding: 0;
     }
+    & .product-name .variation .variation-DespatchNotes p {
+        display: inline;
+        padding: 0;
+    }
+    & .product-name .variation .variation-CustomerShippingWeights p {
+        display: inline;
+        padding: 0;
+    }
     & .product-name .variation dt {
         margin-right: 0.5rem;
         font-weight: bold;
@@ -59,7 +67,12 @@
     & #order_review_heading {
         display:none;
     }
+    & .shop_table .coupon-2-order-value-discount .woocommerce-remove-coupon {
+        display: none;
+    }
 }
+
+
 
 .woocommerce #payment #place_order, .woocommerce-page #payment #place_order {
     background: variables.$secondary-color;

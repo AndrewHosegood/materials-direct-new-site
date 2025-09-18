@@ -1,0 +1,18 @@
+.woocommerce-order-received {
+    & .woocommerce-table ul li p {
+        display: inline;
+        padding: 0;
+    }
+}
+.woocommerce-customer-details--phone, .woocommerce-customer-details--email {
+    padding: 0 0 0 1.5rem;
+}
+.woocommerce .woocommerce-customer-details address {
+    border: 1px solid rgba(0, 0, 0, .1);
+    border-radius: 0;
+    background: #fcfcfc;
+}
+// .woocommerce .woocommerce-customer-details address {
+//     border: 1px solid rgba(0, 0, 0, .1);
+//     border-radius: 0;
+// }

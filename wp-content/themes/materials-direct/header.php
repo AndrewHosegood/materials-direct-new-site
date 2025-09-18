@@ -63,6 +63,23 @@
 					);
 					?>
 				</nav>
+
+				<?php if ( function_exists( 'WC' ) ) : ?>
+				<?php 
+					$cart_count = 0;
+					if ( WC()->cart && is_object( WC()->cart ) && method_exists( WC()->cart, 'get_cart' ) ) {
+						$cart_count = count( WC()->cart->get_cart() );
+					}
+					?>
+					<a href="/basket/" id="header-cart-wrapper" class="header__cart-wrapper">
+						<img class="header__cart-icon" src="<?php echo esc_url( get_template_directory_uri() . '/images/cart-icon.png' ); ?>" alt="Cart">
+						<span class="header__cart-count"><?php echo esc_html( $cart_count ); ?></span>
+					</a>
+				<?php endif; ?>
+
+				
+
+
 				<?php echo do_shortcode('[ivory-search id="112" title="Custom Search Form"]'); ?>
 			</div>
 		</div>

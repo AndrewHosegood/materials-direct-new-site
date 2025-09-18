@@ -164,7 +164,7 @@ if ($is_product_single) {
             <label class="custom-price-calc__label"><input class="product-page__calc-input" type="text" id="input_address_line2" name="custom_address_line2" placeholder="Address Line 2" value="' . $address_line2 . '"></label>
             <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_city" name="custom_city" placeholder="City" value="' . $city . '" required></label>
             <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_county_state" name="custom_county_state" placeholder="County/State" value="' . $county_state . '" required></label>
-            <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_zip_postal" name="custom_zip_postal" placeholder="ZIP/ POstal Code" value="' . $zip_postal . '" required></label>
+            <label class="custom-price-calc__label"><input class="product-page__calc-input product-page__calc-input-small" type="text" id="input_zip_postal" name="custom_zip_postal" placeholder="ZIP/ Postal Code" value="' . $zip_postal . '" required></label>
             <label class="custom-price-calc__label">
                 <select id="input_country" class="product-page__calc-input product-page__calc-input-small" name="custom_country" required>
                     <option value="United Kingdom"' . selected($country, 'United Kingdom', false) . '>United Kingdom</option>
@@ -456,16 +456,60 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
         WC()->session->set('custom_shipping_address', $cart_item_data['custom_inputs']['shipping_address']);
     }
 
-    if ($is_product_single) {
-        // For single products, only include shipping address and default price
-        $product = wc_get_product($product_id);
-        if ($product) {
-            $cart_item_data['custom_inputs']['price'] = floatval($product->get_price());
-            $cart_item_data['custom_inputs']['qty'] = 1;
-            $cart_item_data['custom_inputs']['sheets_required'] = 1;
-            // Optionally add despatch notes for single products
-            $cart_item_data['custom_inputs']['despatch_notes'] = 'Single product to be despatched in 24Hrs (working day)';
+
+    // Get product object
+    $product = wc_get_product($product_id);
+    if (!$product) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("add_custom_price_cart_item_data_secure: Invalid product ID {$product_id}");
         }
+        return $cart_item_data;
+    }
+
+    // Get country from shipping address (default to 'United Kingdom' if not set)
+    $country = isset($cart_item_data['custom_inputs']['shipping_address']['country']) ? $cart_item_data['custom_inputs']['shipping_address']['country'] : 'United Kingdom';
+
+
+
+
+if ($is_product_single) {
+        // For single products, use the WooCommerce product weight and default price
+        $product_weight = $product->get_weight();
+        if (!is_numeric($product_weight) || $product_weight <= 0) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("add_custom_price_cart_item_data_secure: Invalid weight for single product ID {$product_id}");
+            }
+            $total_del_weight = 0; // Fallback to avoid breaking
+        } else {
+            $total_del_weight = floatval($product_weight); // Use product weight directly
+        }
+
+        // Calculate shipping cost
+        $final_shipping = calculate_shipping_cost($total_del_weight, $country);
+
+        // Set despatch notes and shipment date (default to 24 hours for single products)
+        $despatch_notes = 'Single product to be despatched in 24Hrs (working day)';
+        $shipments = date('d/m/Y', strtotime('+1 days'));
+
+        // Store data in cart item
+        $cart_item_data['custom_inputs'] = array_merge($cart_item_data['custom_inputs'], [
+            'price' => floatval($product->get_price()),
+            'qty' => 1,
+            'sheets_required' => 1,
+            'despatch_notes' => $despatch_notes,
+            'shipments' => $shipments,
+            'total_del_weight' => $total_del_weight,
+            'final_shipping' => $final_shipping,
+        ]);
+
+        // Log for debugging
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("add_custom_price_cart_item_data_secure (Single Product ID: {$product_id}):");
+            error_log("  total_del_weight: {$total_del_weight}");
+            error_log("  final_shipping: {$final_shipping}");
+            error_log("  shipments: {$shipments}");
+        }
+
         return $cart_item_data;
     }
 
@@ -487,7 +531,6 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
     }
 
     // Get product object to retrieve sheet dimensions
-    $product = wc_get_product($product_id);
     $sheet_length_mm = $product->get_length() * 10; // Convert cm to mm
     $sheet_width_mm = $product->get_width() * 10;   // Convert cm to mm
     $part_width_mm = floatval($_POST['custom_width']);
@@ -495,7 +538,6 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
     $quantity = intval($_POST['custom_qty']);
     $product_weight = $product->get_weight();
     $discount_rate = isset($_POST['custom_discount_rate']) ? floatval($_POST['custom_discount_rate']) : 0;
-    $country = sanitize_text_field($_POST['custom_country']);
 
     $discount_labels = [
         '0' => '24Hrs (working day)',
@@ -573,6 +615,14 @@ function add_custom_price_cart_item_data_secure($cart_item_data, $product_id) {
         'total_del_weight' => $total_del_weight,
         'despatch_notes' => $despatch_notes,
     ]);
+
+    // Log for debugging
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log("add_custom_price_cart_item_data_secure (Non-Single Product ID: {$product_id}):");
+        error_log("  total_del_weight: {$total_del_weight}");
+        error_log("  final_shipping: {$final_shipping}");
+        error_log("  shipments: {$shipments}");
+    }
 
     return $cart_item_data;
 }
@@ -718,19 +768,7 @@ function add_custom_shipping_to_order($order, $data) {
     foreach ($shipping_by_date as $date => $data) {
         $total_shipping += floatval($data['final_shipping']);
     }
-    /*
-    if ($total_shipping > 0) {
-        $shipping_rate = new WC_Shipping_Rate(
-            'custom_shipping_rate',
-            'Shipping Total',
-            $total_shipping,
-            [],
-            'custom_shipping_method',
-            ''
-        );
-        $order->add_shipping($shipping_rate);
-    }
-    */
+
     if ($total_shipping > 0) {
         // Create a new shipping item
         $shipping_item = new WC_Order_Item_Shipping();
@@ -742,20 +780,6 @@ function add_custom_shipping_to_order($order, $data) {
         $order->add_item($shipping_item);
     }
     // Update shipping address from session
-    /*
-    $shipping_address = WC()->session->get('custom_shipping_address');
-    if ($shipping_address && is_array($shipping_address)) {
-        $order->set_shipping_first_name(isset($data['billing_first_name']) ? $data['billing_first_name'] : '');
-        $order->set_shipping_last_name(isset($data['billing_last_name']) ? $data['billing_last_name'] : '');
-        $order->set_shipping_company(isset($data['billing_company']) ? $data['billing_company'] : '');
-        $order->set_shipping_address_1($shipping_address['street_address']);
-        $order->set_shipping_address_2(!empty($shipping_address['address_line2']) ? $shipping_address['address_line2'] : '');
-        $order->set_shipping_city($shipping_address['city']);
-        $order->set_shipping_state($shipping_address['county_state']);
-        $order->set_shipping_postcode($shipping_address['zip_postal']);
-        $order->set_shipping_country($shipping_address['country']);
-    }
-    */
     $shipping_address = WC()->session->get('custom_shipping_address');
     if ($shipping_address && is_array($shipping_address)) {
         $order->set_shipping_first_name(isset($data['billing_first_name']) ? $data['billing_first_name'] : '');
@@ -802,8 +826,21 @@ function save_sheets_required_to_order_item($item, $cart_item_key, $values, $ord
     if (isset($values['custom_inputs']['shipping_address'])) {
         $item->add_meta_data('custom_shipping_address', $values['custom_inputs']['shipping_address'], true);
     }
+
+    if (isset($values['custom_inputs']['width'])) {
+        $item->add_meta_data('width', $values['custom_inputs']['width'], true);
+    }
+    if (isset($values['custom_inputs']['length'])) {
+        $item->add_meta_data('length', $values['custom_inputs']['length'], true);
+    }
+    if (isset($values['custom_inputs']['qty'])) {
+        $item->add_meta_data('qty', $values['custom_inputs']['qty'], true);
+    }
     if (isset($values['custom_inputs']['despatch_notes'])) {
         $item->add_meta_data('despatch_notes', $values['custom_inputs']['despatch_notes'], true);
+    }
+    if (isset($values['custom_inputs']['total_del_weight'])) {
+        $item->add_meta_data('total_del_weight', $values['custom_inputs']['total_del_weight'], true);
     }
 }
 // SAVE ALL RELEVANT DATA TO ORDER ITEM META
@@ -916,7 +953,7 @@ function apply_secure_custom_price($cart) {
     if (is_admin() && !defined('DOING_AJAX')) return;
 
 
-    foreach ($cart->get_cart() as $cart_item) {
+    foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
         $product_id = $cart_item['product_id'];
         $is_product_single = function_exists('get_field') ? get_field('is_product_single', $product_id) : false;
 
@@ -936,9 +973,28 @@ function apply_secure_custom_price($cart) {
 
 
             // SEND PRICE TO CART
+            /*
             if (!is_wp_error($total_price)) {
                 $total_price_2 = $total_price / $sheets_required;
                 $cart_item['data']->set_price($total_price_2);
+            }
+            */
+            if (!is_wp_error($total_price)) {
+                // Prevent division by zero
+                if ($sheets_required <= 0) {
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("apply_secure_custom_price: Invalid sheets_required ($sheets_required) for cart item key $cart_item_key. Product ID: $product_id, Width: $width, Length: $length, Qty: $qty");
+                    }
+                    // Fallback: Set price to total_price or skip setting price
+                    $cart_item['data']->set_price($total_price);
+                    continue;
+                }
+                $total_price_2 = $total_price / $sheets_required;
+                $cart_item['data']->set_price($total_price_2);
+            } else {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("apply_secure_custom_price: Error calculating price for product ID $product_id: " . $total_price->get_error_message());
+                }
             }
         }
     }
@@ -1089,14 +1145,14 @@ function display_global_shipping_address_cart() {
 
     echo '<div class="global-shipping-address" style="margin-top:20px;">';
     echo '<h3>Shipping Details</h3>';
-    echo '<p><strong>Shipping Address: </strong>';
-    echo esc_html($shipping_address['street_address']) . ', ';
+    echo '<p><strong>Shipping Address: </strong><p class="global-shipping-address-list">';
+    echo esc_html($shipping_address['street_address']) . '<br>';
     if (!empty($shipping_address['address_line2'])) {
-        echo esc_html($shipping_address['address_line2']) . ', ';
+        echo esc_html($shipping_address['address_line2']) . '<br>';
     }
-    echo esc_html($shipping_address['city']) . ', ' . esc_html($shipping_address['county_state']) . ', ' . esc_html($shipping_address['zip_postal']) . ', ';
+    echo esc_html($shipping_address['city']) . '<br>' . esc_html($shipping_address['county_state']) . '<br>' . esc_html($shipping_address['zip_postal']) . '<br>';
     echo esc_html($shipping_address['country']) . '';
-    echo '</p>';
+    echo '</p></p>';
     echo '</div>';
 }
 // DISPLAY GLOBAL SHIPPING ADDRESS BELOW CART TABLES
@@ -1202,12 +1258,14 @@ function display_custom_inputs_on_product_page() {
 
     if ($is_product_single) {
         // Display minimal info for single products
-        $total_del_weight = $product_weight;
-        echo '<div class="custom-product-info" style="margin-bottom: 20px;">';
-        echo '<h3>Product Details</h3>';
-        echo '<p><strong>Price:</strong> ' . wc_price($product->get_price()) . '</p>';
-        echo '<p><strong>Total Delivery Weight:</strong> ' . esc_html($total_del_weight) . ' ' . esc_html($weight_unit) . '</p>'; // new value to sort
-        echo '</div>';
+        // $total_del_weight = $product_weight;
+        // $delivery_time = "24Hrs (working day)";
+        // echo '<div class="custom-product-info" style="margin-bottom: 20px;">';
+        // echo '<h3>Product Details</h3>';
+        // echo '<p><strong>Price:</strong> ' . wc_price($product->get_price()) . '</p>';
+        // echo '<p><strong>Total Delivery Weight:</strong> ' . esc_html($total_del_weight) . ' ' . esc_html($weight_unit) . '</p>';
+        // echo '<p><strong>Delivery Time:</strong> ' . esc_html($delivery_time) . '</p>';
+        // echo '</div>';
         return;
     }
 

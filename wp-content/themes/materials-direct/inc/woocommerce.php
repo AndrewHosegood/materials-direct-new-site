@@ -118,7 +118,7 @@ if ( ! function_exists( 'materials_direct_woocommerce_wrapper_before' ) ) {
 	 */
 	function materials_direct_woocommerce_wrapper_before() {
 		?>
-			<main id="primary" class="site-main container">
+			<main id="primary" class="site-main container yyy">
 		<?php
 	}
 }

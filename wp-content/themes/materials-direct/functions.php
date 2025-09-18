@@ -155,14 +155,15 @@ function materials_direct_scripts() {
 
 	wp_enqueue_style( 'font-awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css', array(), '6.6.0' );
 
-	// ✅ Enqueue main.css after WooCommerce styles
+	// Enqueue main.css after WooCommerce styles
 	wp_enqueue_style(
-		'materials-direct-main', // Handle
-		get_template_directory_uri() . '/css/main.css', // Path to main.css
-		array( 'woocommerce-general' ), // Dependency
-		'1.0', // Version
-		'all' // Media
+		'materials-direct-main',
+		get_template_directory_uri() . '/css/main.css',
+		array( 'woocommerce-general' ), 
+		filemtime( get_template_directory() . '/css/main.css' ), 
+		'all' 
 	);
+
 
 }
 add_action( 'wp_enqueue_scripts', 'materials_direct_scripts', 20 );
@@ -193,6 +194,14 @@ require get_template_directory() . '/inc/customizer.php';
 if ( defined( 'JETPACK__VERSION' ) ) {
 	require get_template_directory() . '/inc/jetpack.php';
 }
+
+
+add_action( 'wp_enqueue_scripts', function() {
+    if ( function_exists( 'is_woocommerce' ) ) {
+        wp_enqueue_script( 'wc-cart-fragments' );
+    }
+}, 20 );
+
 
 
 /* BEGIN CUSTOM FUNCTIONS */
@@ -253,10 +262,41 @@ require_once('includes/display-backorder-message.php');
 require_once('includes/conditionally-hide-price.php');
 // conditionally show/hide product price based on single product
 
+// Rename listed items on thankyou page
+require_once('includes/rename-listed-items-on-thankyou-page.php');
+// Rename listed items on thankyou page
+
+
+// Rename listed items on thankyou page
+require_once('includes/cart-fragments-functionality-for-cart-icon.php');
+// Rename listed items on thankyou page
+
+
+
 /* END CUSTOM FUNCTIONS */
 
 
 
+add_action( 'woocommerce_single_product_summary', 'show_stock_sheet_size', 29 );
+function show_stock_sheet_size() {
+    global $product;
+
+    if ( ! $product ) {
+        return;
+    }
+
+    // Get shipping dimensions
+    $width  = $product->get_width();
+    $length = $product->get_length();
+
+    // Only display if both width and length exist
+    if ( $width && $length ) {
+        // Format as cm (WooCommerce stores dimensions in the store unit, e.g. cm/mm/inch)
+        echo '<p class="product-page__stock-sheet-size" style="margin:10px 0; font-weight:bold; font-size:16px;">';
+        echo 'Stock sheet size: ' . esc_html( $length ) . 'cm x ' . esc_html( $width ) . 'cm';
+        echo '</p>';
+    }
+}
 
 
 
@@ -264,20 +304,6 @@ require_once('includes/conditionally-hide-price.php');
 // Temporary - display acf is_single_product on product page
 //require_once('includes/display-is-single-product-on-product-page.php');
 // Temporary - display acf is_single_product on product page
-
-
-
-
-
-// Force WooCommerce to always use the Standard tax class for shipping
-/*
-add_filter('woocommerce_shipping_tax_class', function($tax_class, $package, $shipping_method) {
-    error_log('DEBUG: WooCommerce shipping tax class before override = ' . (empty($tax_class) ? 'Standard' : $tax_class));
-    return '';
-}, 10, 3);
-*/
-
-
 
 
 

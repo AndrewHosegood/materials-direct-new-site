@@ -1,5 +1,6 @@
 @use "../abstracts/breakpoints";
 @use "../abstracts/variables";
+@use 'sass:color';
 
 .page-id-9 {
     & .entry-header {
@@ -42,11 +43,19 @@
         font-weight: bold;
         line-height: 2rem;
     }
+    & .global-shipping-address-list {
+        padding: 0;
+        line-height: 1.45rem;
+        margin-top: -0.6rem;
+    }
     & .cart_totals__shipment {
         padding: 0
     }
     & .cart_totals__shipment-details {
         padding: 0;
+    }
+    & .woocommerce-remove-coupon {
+        display: none;
     }
 }
 
@@ -75,16 +84,16 @@
 .woocommerce .shop_table .product-remove {
     max-width: 60px;
 }
-// .woocommerce-cart .checkout-button {
-//         background: variables.$secondary-color !important;
-//         font-weight: 400 !important;
-// }
 .woocommerce-cart .wc-proceed-to-checkout a.checkout-button {
     background: variables.$secondary-color;
     font-weight: 400;
+    transition: background 0.15s ease-in;
+}
+.woocommerce-cart .wc-proceed-to-checkout a.checkout-button:hover {
+    background: #1a2631;
+    
 }
 .woocommerce .shop_table .product-remove a.remove {
-    float: right;
     margin: 5px 25px 0 0;
     width: auto;
     height: auto;

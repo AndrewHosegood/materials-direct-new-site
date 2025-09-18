@@ -125,6 +125,14 @@
     &__backorder-message-text {
         padding: 0;
     }
+    &__qty-label {
+        color: variables.$secondary-color;
+        font-weight: 600;
+    }
+    &__stock-sheet-size {
+        margin: 0;
+        padding: 0;
+    }
 }
 .single-product div.product .stock.out-of-stock {
     margin-bottom: 1.5rem;
@@ -162,4 +170,10 @@
     color: variables.$primary-color;
     font-weight: 700;
     padding: 0.2rem 0;
+}
+
+.woocommerce div.product .qty {
+    border: 1px solid #efefef;
+    padding: 0.3rem 0.5rem;
+    margin: 1rem 0;
 }
