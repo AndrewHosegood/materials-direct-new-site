@@ -1257,15 +1257,6 @@ function display_custom_inputs_on_product_page() {
     $weight_unit = get_option('woocommerce_weight_unit');
 
     if ($is_product_single) {
-        // Display minimal info for single products
-        // $total_del_weight = $product_weight;
-        // $delivery_time = "24Hrs (working day)";
-        // echo '<div class="custom-product-info" style="margin-bottom: 20px;">';
-        // echo '<h3>Product Details</h3>';
-        // echo '<p><strong>Price:</strong> ' . wc_price($product->get_price()) . '</p>';
-        // echo '<p><strong>Total Delivery Weight:</strong> ' . esc_html($total_del_weight) . ' ' . esc_html($weight_unit) . '</p>';
-        // echo '<p><strong>Delivery Time:</strong> ' . esc_html($delivery_time) . '</p>';
-        // echo '</div>';
         return;
     }
 
@@ -1327,7 +1318,6 @@ function display_custom_inputs_on_product_page() {
         if (!is_numeric($product_weight) || $product_weight <= 0) {
             $total_del_weight = new WP_Error('invalid_weight', 'Invalid or missing product weight');
         } else {
-
             $totalSqMm = $part_length_mm * $part_width_mm;
             $totalSqCm = $totalSqMm / 100;
             $total_del_weight = $totalSqCm * floatval($product_weight) * $quantity * 1.03;
@@ -1351,10 +1341,12 @@ function display_custom_inputs_on_product_page() {
             //error_log("description: $description");
         }
 
+
         // Debug logging (only if WP_DEBUG is enabled)
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log("Debug [Product ID: $product_id, Weight Calculation]:");
             error_log("  sheets: $sheets");
+            error_log("  stock_quantity: $stock_quantity");
             error_log("  product_weight: $product_weight $weight_unit");
             error_log("  total_del_weight: " . (is_wp_error($total_del_weight) ? $total_del_weight->get_error_message() : "$total_del_weight $weight_unit"));
             error_log("  final_shipping: $final_shipping");

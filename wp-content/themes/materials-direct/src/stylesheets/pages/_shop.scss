@@ -1,0 +1,11 @@
+@use "../abstracts/breakpoints";
+@use "../abstracts/variables";
+
+.woocommerce-shop .woocommerce a.button {
+    background: variables.$primary-color;
+    color: white;
+    font-weight: 400;
+    text-align: center;
+    display:block;
+    width: 100%;
+}

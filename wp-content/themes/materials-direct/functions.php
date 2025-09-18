@@ -210,9 +210,13 @@ add_action( 'wp_enqueue_scripts', function() {
 require_once('includes/acf_global_options.php');
 // Generate and display PPP for testing
 
-// Generate and display PPP for testing
+// THEME ALGORITHM AND CORE FUNCTIONALITY ****
 require_once('includes/algorithm_and_core_functionality.php');
-// Generate and display PPP for testing
+// THEME ALGORITHM AND CORE FUNCTIONALITY ****
+
+// Lets make sure that a product cannot be added to cart if width length and qty is empty
+require_once('includes/custom-price-add-to-cart-validation.php');
+// Lets make sure that a product cannot be added to cart if width length and qty is empty
 
 // Display Ajax Page spinner
 require_once('includes/allow-svg-upload.php');
@@ -246,6 +250,10 @@ require_once('includes/prevent-duplicate-order-merge.php');
 require_once('includes/related-products-styling.php');
 // Related products styling
 
+// Shop page styling
+require_once('includes/shop-page-styling.php');
+// Shop page styling
+
 // Custom product page tabs
 require_once('includes/custom-product-tabs.php');
 // Custom product page tabs
@@ -266,37 +274,48 @@ require_once('includes/conditionally-hide-price.php');
 require_once('includes/rename-listed-items-on-thankyou-page.php');
 // Rename listed items on thankyou page
 
-
-// Rename listed items on thankyou page
+// Cart fragments functionality for cart quantity icon in header
 require_once('includes/cart-fragments-functionality-for-cart-icon.php');
-// Rename listed items on thankyou page
+// Cart fragments functionality for cart quantity icon in header
 
+// Show stock sheet size on product page
+require_once('includes/show-stock-sheet-size-on-product-page.php');
+// Show stock sheet size on product page
 
+// change the shop grid to 3 columns
+require_once('includes/change-shop-grid-to-3-columns.php');
+// change the shop grid to 3 columns
 
 /* END CUSTOM FUNCTIONS */
 
 
 
-add_action( 'woocommerce_single_product_summary', 'show_stock_sheet_size', 29 );
-function show_stock_sheet_size() {
+
+/*
+function display_part_backorder_stock_message() {
     global $product;
 
-    if ( ! $product ) {
-        return;
+    $product_id = $product->get_id();
+    $stock_quantity = $product->get_stock_quantity();
+
+	// we need to get the sheets required
+
+    $is_backorder = $stock_quantity <= 0;
+
+    if ($is_backorder) {
+        echo '<div class="product-page__backorder-message">';
+        echo '<p class="product-page__backorder-message-text"><strong>Notice:</strong> This order exceeds current stock, it requires additional sheets to be back ordered. Please allow 35 Days to complete the back ordered items. A 5% discount will apply to these parts. </p>';
+        echo '</div>';
+        echo '<script type="text/javascript">
+        jQuery(function($){
+            $("#despatched_within").hide();
+        });
+        </script>';
     }
 
-    // Get shipping dimensions
-    $width  = $product->get_width();
-    $length = $product->get_length();
-
-    // Only display if both width and length exist
-    if ( $width && $length ) {
-        // Format as cm (WooCommerce stores dimensions in the store unit, e.g. cm/mm/inch)
-        echo '<p class="product-page__stock-sheet-size" style="margin:10px 0; font-weight:bold; font-size:16px;">';
-        echo 'Stock sheet size: ' . esc_html( $length ) . 'cm x ' . esc_html( $width ) . 'cm';
-        echo '</p>';
-    }
 }
+add_action('woocommerce_before_add_to_cart_form', 'display_part_backorder_stock_message', 100);
+*/
 
 
 

@@ -37,8 +37,48 @@ function custom_modify_product_tabs( $tabs ) {
 
 // Callback Functions for Each Tab Content
 function custom_features_tab_content() {
-    echo '<h2>Features</h2>';
-    echo '<p>List of features goes here...</p>';
+    ?>
+    <div class="mkd-grid">
+        <div class="mkd-grid-row ">
+            <div class="mkd-grid-col-6 enq left">
+                <?php if( have_rows('specifications') ): ?>
+                <h3>Features</h3>
+                <?php while ( have_rows('specifications') ) : the_row(); ?>
+                <div class="feat-blck">
+
+                    <?php if(get_sub_field('group_heading')): ?>
+                    <h3><?php the_sub_field('group_heading'); ?></h3>
+                    <?php endif; ?>
+                        
+                    <?php if( have_rows('list_items') ): ?>
+        
+                    <ul class="features">
+                    <?php while ( have_rows('list_items') ) : the_row(); ?>
+                        <li><?php the_sub_field('secification_item'); ?></li>
+                    <?php endwhile; ?>
+                    </ul>
+                    <?php endif; ?>
+            </div>
+            <?php endwhile; ?>
+            <?php endif; ?>
+            </div>
+            <div class="mkd-grid-col-6 enq right">
+                <?php if( have_rows('spec_highlight_list') ): ?>
+                <div class="specs">
+                <h3>Recommended Uses</h3>
+                <ul class="fullFeats">
+                    <?php while ( have_rows('spec_highlight_list') ) : the_row(); ?>
+
+                        <li><?php the_sub_field('sh_list_item'); ?></li>
+
+                    <?php endwhile; ?>
+                </ul>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+    </div>
+    <?php
 }
 
 function custom_technical_data_tab_content() {
