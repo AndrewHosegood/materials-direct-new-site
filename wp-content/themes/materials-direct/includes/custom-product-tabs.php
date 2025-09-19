@@ -38,16 +38,16 @@ function custom_modify_product_tabs( $tabs ) {
 // Callback Functions for Each Tab Content
 function custom_features_tab_content() {
     ?>
-    <div class="mkd-grid">
-        <div class="mkd-grid-row ">
-            <div class="mkd-grid-col-6 enq left">
+    <div class="woocommerce-tabs__mkd-grid">
+        <div class="woocommerce-tabs__mkd-grid-row">
+            <div class="woocommerce-tabs__mkd-grid-col-6">
                 <?php if( have_rows('specifications') ): ?>
-                <h3>Features</h3>
+                <h3 class="woocommerce-tabs__mkd-grid-heading">Features</h3>
                 <?php while ( have_rows('specifications') ) : the_row(); ?>
-                <div class="feat-blck">
+                <div class="woocommerce-tabs__feat-blck">
 
                     <?php if(get_sub_field('group_heading')): ?>
-                    <h3><?php the_sub_field('group_heading'); ?></h3>
+                    <h3 class="woocommerce-tabs__mkd-grid-subheading"><?php the_sub_field('group_heading'); ?></h3>
                     <?php endif; ?>
                         
                     <?php if( have_rows('list_items') ): ?>
@@ -62,11 +62,11 @@ function custom_features_tab_content() {
             <?php endwhile; ?>
             <?php endif; ?>
             </div>
-            <div class="mkd-grid-col-6 enq right">
+            <div class="woocommerce-tabs__mkd-grid-col-6">
                 <?php if( have_rows('spec_highlight_list') ): ?>
-                <div class="specs">
-                <h3>Recommended Uses</h3>
-                <ul class="fullFeats">
+                <div class="woocommerce-tabs__specs">
+                <h3 class="woocommerce-tabs__mkd-grid-heading">Recommended Uses</h3>
+                <ul class="woocommerce-tabs__fullFeats">
                     <?php while ( have_rows('spec_highlight_list') ) : the_row(); ?>
 
                         <li><?php the_sub_field('sh_list_item'); ?></li>
@@ -87,12 +87,69 @@ function custom_technical_data_tab_content() {
 }
 
 function custom_downloads_tab_content() {
-    echo '<h2>Downloads</h2>';
-    echo '<p>Provide download links or documents here...</p>';
+
+
+        // check if the repeater field has rows of data
+        if( have_rows('download_items') ):
+
+            // loop through the rows of data
+            while ( have_rows('download_items') ) : the_row(); 
+            
+            $image = get_sub_field('download_image');
+            ?>
+            
+
+
+
+        <div class="col-md-3 download-blk">
+            <div class="inner">
+                <div class="d-img">
+                    <?php if( !empty($image) ): ?>
+                        <a href="<?php the_sub_field('download_file'); ?>" target="_blank"><div class="img-inner" style="background-image: url(<?php echo $image['url']; ?>);"></div></a>
+                    <?php endif; ?>
+                </div>
+                <div class="d-title"><a href="<?php the_sub_field('download_file'); ?>" target="_blank"><h4><?php the_sub_field('download_title'); ?></h4></a></div>
+                <div class="d-desc"><?php the_sub_field('download_description'); ?></div>
+            </div>
+        </div>
+
+
+        <?php
+            endwhile;
+
+        else :
+
+            // no rows found
+
+        endif;
+
+
 }
 
 function custom_enquiry_tab_content() {
-    echo '<h2>Enquiry</h2>';
-    echo '<p>You could embed a contact form here.</p>';
-    // Example: echo do_shortcode('[contact-form-7 id="123" title="Product Enquiry"]');
+    ?>
+        <div class="woocommerce-tabs__mkd-grid">
+        <div class="woocommerce-tabs__mkd-grid-row">
+            <div class="woocommerce-tabs__mkd-grid-col-6 enq left">
+                <div class="woocommerce-tabs__form">    
+                    <?php
+                        if( get_field('contact_shortcode_enquire_tab', 'option') ):
+                        $cshort = get_field('contact_shortcode_enquire_tab', 'option');
+                        echo do_shortcode($cshort);
+                        endif;
+                    ?>
+                </div>
+            </div>
+            <div class="woocommerce-tabs__mkd-grid-col-6 enq right">
+                <div class="woocommerce-tabs__contact-address">
+                <?php
+                if( get_field('contact_information', 'option') ):
+                    the_field('contact_information', 'option');
+                endif;
+                ?>
+                </div>
+            </div>
+        </div>
+        </div>
+    <?php            
 }

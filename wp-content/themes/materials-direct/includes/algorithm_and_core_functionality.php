@@ -202,7 +202,9 @@ function calculate_secure_price() {
         wp_send_json_success([
             'price' => round($price, 2),
             'per_part' => round($price, 2), // No per-part calculation needed
-            'sheets_required' => 1 // Default to 1 sheet for single products
+            'sheets_required' => 1, // Default to 1 sheet for single products
+            'stock_quantity' => $product->get_stock_quantity(),
+            'is_backorder' => false // Single products don't use sheets, so no backorder
         ]);
         return;
     }
@@ -224,6 +226,7 @@ function calculate_secure_price() {
     }
     $sheet_length_mm = $product->get_length() * 10; // Convert cm to mm
     $sheet_width_mm = $product->get_width() * 10;   // Convert cm to mm
+    $stock_quantity = $product->get_stock_quantity();
 
     if ($sheet_length_mm <= 0 || $sheet_width_mm <= 0) {
         wp_send_json_error(['message' => 'Invalid sheet dimensions for this product.']);
@@ -247,6 +250,7 @@ function calculate_secure_price() {
 
     if (is_wp_error($total_price)) {
         wp_send_json_error(['message' => $total_price->get_error_message()]);
+        return;
     }
     $per_part_price = $total_price / $qty;
 
@@ -261,16 +265,34 @@ function calculate_secure_price() {
 
     $sheets_required = $sheet_result['sheets_required'];
 
+// Check if order exceeds stock and requires backorder, but only if stock_quantity > 0
+    $is_backorder = false;
+    if ($stock_quantity > 0) {
+        $is_backorder = $sheets_required > $stock_quantity;
+        /*
+        if ($is_backorder) {
+            // Ensure at least 5% discount for backordered items
+            $discount_rate = max($discount_rate, 0.05);
+            // Recalculate price with updated discount rate if necessary
+            $total_price = calculate_product_price($product_id, $width, $length, $qty, $discount_rate);
+            $per_part_price = $total_price / $qty;
+        }
+        */
+    }
+
     // Optional: Log for debugging (remove in production)
     if (defined('WP_DEBUG') && WP_DEBUG) {
         error_log("Dynamic sheets calculation: Sheets required = $sheets_required for width=$width, length=$length, qty=$qty, sheet=$sheet_width_mm x $sheet_length_mm");
+        error_log("Stock check: sheets_required=$sheets_required, stock_quantity=$stock_quantity, is_backorder=" . ($is_backorder ? 'true' : 'false'));
     }
 
     // SEND DATA TO algorith-core-functionality.js
     wp_send_json_success([
         'price' => round($total_price, 2),
         'per_part' => round($per_part_price, 2),
-        'sheets_required' => $sheets_required 
+        'sheets_required' => $sheets_required,
+        'stock_quantity' => $stock_quantity,
+        'is_backorder' => $is_backorder
     ]);
 }
 // 3. SECURE PRICE CALCULATION IN PHP
