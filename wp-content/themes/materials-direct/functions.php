@@ -210,9 +210,10 @@ add_action( 'wp_enqueue_scripts', function() {
 require_once('includes/acf_global_options.php');
 // Generate and display PPP for testing
 
-// THEME ALGORITHM AND CORE FUNCTIONALITY ****
+// **** THEME ALGORITHM AND CORE FUNCTIONALITY ****
 require_once('includes/algorithm_and_core_functionality.php');
-// THEME ALGORITHM AND CORE FUNCTIONALITY ****
+require_once('includes/fix-for-woocommerce-rounding-errors.php');
+// **** THEME ALGORITHM AND CORE FUNCTIONALITY ****
 
 // Lets make sure that a product cannot be added to cart if width length and qty is empty
 require_once('includes/custom-price-add-to-cart-validation.php');
@@ -287,6 +288,7 @@ require_once('includes/change-shop-grid-to-3-columns.php');
 // change the shop grid to 3 columns
 
 /* END CUSTOM FUNCTIONS */
+
 
 
 

@@ -26,7 +26,6 @@ jQuery(document).ready(function($) {
     
     // Generate Price Button (only for non-single products)
     if (!isProductSingle) {
-
         $('#generate_price').on('click', function() {
             const width = parseFloat($('#input_width').val());
             const length = parseFloat($('#input_length').val());
@@ -67,22 +66,25 @@ jQuery(document).ready(function($) {
                 success: function(response) {
                     $('#price-spinner-overlay').fadeOut(200);
                     if (response.success) {
-                        const price = response.data.price;
-                        const adjustedPrice = response.data.per_part;
+                        const price = parseFloat(response.data.price);
+                        const adjustedPrice = parseFloat(response.data.per_part);
                         const sheetsRequired = response.data.sheets_required || 1;
                         const isBackorder = response.data.is_backorder || false;
+                        const sheetsBackorder = response.data.sheets_backorder || 0;
+                        const partsBackorder = response.data.parts_backorder || 0;
+                        const ableToDispatch = response.data.able_to_dispatch || 0;
+                        const pricePerSheet = response.data.price_per_sheet; // Use server-calculated price per sheet
 
                         // Calculate price per sheet for the hidden field
-                        const cart_price = price / sheetsRequired;
+                        //const cart_price = price / sheetsRequired;
 
                         // Build price display HTML
                         let priceHtml = '<div class="product-page__display-price-outer"><div><h4 class="product-page__display-price-heading">Here is your instant quote</h4></div><div class="product-page__display-price-inner"><div class="product-page__display-price">Cost per part: <span class="product-page__display-price-text">£' + adjustedPrice.toFixed(2) + '</span></div><div class="product-page__display-price">Total part costs: <span class="product-page__display-price-text">£' + price.toFixed(2) + '</span></div></div></div>';
 
                         // Add backorder message if applicable
                         if (isBackorder) {
-                            priceHtml += '<div class="product-page__backorder-message"><p class="product-page__backorder-message-text"><strong>Notice:</strong> This order exceeds current stock, it requires additional sheets to be back ordered. Please allow 35 Days to complete the back ordered items. A 5% discount will apply to these parts. </p></div>';
+                            priceHtml += '<div id="partial-backorder-message" class="product-page__backorder-message"><p class="product-page__backorder-message-text"><strong>Notice:</strong> This order exceeds current stock. It requires an additional ' + sheetsBackorder + ' sheet(s) and ' + partsBackorder + ' part(s) to be backordered. We can dispatch ' + ableToDispatch + ' part(s) within 24 hours (working day). Please allow 35 days to complete the order. A 5% discount will apply to these parts.</p></div>';
                         }
-
 
 
 
@@ -90,14 +92,29 @@ jQuery(document).ready(function($) {
                         // DISPLAY PRICE AND PART COST ON PRODUCT PAGE AFTER CLICKING 'CALCULATE PRICE'
                         $('#custom_price_display').html(priceHtml);
                         // ADD PRICE TO HIDDEN FIELD THAT IS THEN PASSED TO CART
-                        //$('#custom_price').val(price); 
-                        $('#custom_price').val(cart_price);
+                        $('#custom_price').val(price); // Store total_price
+                        $('#sheets_required').val(sheetsRequired); // Store sheets_required
                         $('input[name="quantity"]').val(sheetsRequired); 
+                        $('#is_backorder').val(isBackorder ? '1' : '0');
+                        $('#able_to_dispatch').val(ableToDispatch);
+                        $('#parts_backorder').val(partsBackorder);
+
+                        // Log for debugging
+                        console.log('Backorder data set:', {
+                            is_backorder: isBackorder ? '1' : '0',
+                            able_to_dispatch: ableToDispatch,
+                            parts_backorder: partsBackorder,
+                            total_price: price.toFixed(2),
+                            sheets_required: sheetsRequired
+                        });
+
                     } else {
-                        $('#custom_price_display').html('Error: ' + (response.data.message || 'Unable to calculate price.'));
+                        console.log('Error message:', response.data ? response.data.message : 'No error message');
+                        $('#custom_price_display').html('Error: ' + (response.data && response.data.message ? response.data.message : 'Unable to calculate price.'));
                     }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.log('AJAX error:', status, error, xhr.responseText);
                     $('#price-spinner-overlay').fadeOut(200);
                     $('#custom_price_display').html('Error: Server error.');
                 }
@@ -105,7 +122,7 @@ jQuery(document).ready(function($) {
         });
 
         // Validate shipping address on Add to Cart form submission
-        $('.woocommerce-cart-form, form.cart').on('submit', function(e) {
+        $('form.cart').on('submit', function(e) {
             const price = $('#custom_price').val(); 
             if (!price) {
                 e.preventDefault();
@@ -118,6 +135,17 @@ jQuery(document).ready(function($) {
                 e.preventDefault();
                 return false;
             }
+
+            const formData = $(this).serialize();
+            console.log('Form submission data:', formData);
+
+            // Ensure hidden fields are included
+            console.log('Hidden fields:', {
+                custom_price: $('#custom_price').val(),
+                is_backorder: $('#is_backorder').val(),
+                able_to_dispatch: $('#able_to_dispatch').val(),
+                parts_backorder: $('#parts_backorder').val()
+            });
 
         });
     } else {
@@ -146,7 +174,7 @@ jQuery(document).ready(function($) {
         });
 
         // Validate and save shipping address on Add to Cart for single products
-        $('.woocommerce-cart-form, form.cart').on('submit', function(e) {
+        $('form.cart').on('submit', function(e) {
             const price = $('#custom_price').val();
             if (!price) {
                 e.preventDefault();
